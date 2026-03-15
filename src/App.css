@@ -1,0 +1,162 @@
+/* הגדרות כלליות */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #ffffff 0%, #e1efff 100%);
+  direction: rtl;
+  font-family: 'Assistant', sans-serif;
+  padding: 20px;
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 450px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* לוגו בסגנון FixMate */
+.auth-logo {
+  font-size: 40px;
+  font-weight: 800;
+  color: #2266b1; /* הכחול של המותג */
+  margin-bottom: 20px;
+}
+
+.auth-logo span {
+  color: #333;
+}
+
+/* כרטיס ההתחברות */
+.auth-card {
+  background: #ffffff;
+  width: 100%;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.auth-title {
+  font-size: 26px;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.auth-subtitle {
+  color: #777;
+  font-size: 15px;
+  margin-bottom: 30px;
+}
+
+/* שדות קלט */
+.field-wrap {
+  text-align: right;
+  margin-bottom: 20px;
+}
+
+.field-wrap label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #444;
+}
+
+.input-field {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+  box-sizing: border-box;
+  transition: 0.3s;
+}
+
+.input-field:focus {
+  border-color: #2266b1;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(34, 102, 177, 0.1);
+}
+
+.input-field.invalid {
+  border-color: #ff4d4d;
+}
+
+.error-msg {
+  color: #ff4d4d;
+  font-size: 12px;
+  margin-top: 5px;
+  display: block;
+}
+
+/* אפשרויות וכפתורים */
+.auth-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  margin-bottom: 25px;
+}
+
+.forgot-btn {
+  background: none;
+  border: none;
+  color: #2266b1;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 15px;
+  background-color: #2266b1;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background-color: #1a5291;
+  transform: translateY(-2px);
+}
+
+.submit-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.register-link {
+  margin-top: 25px;
+  font-size: 14px;
+  color: #666;
+}
+
+.orange-text {
+  color: #f29422; /* הכתום של המותג */
+  text-decoration: none;
+  font-weight: bold;
+}
+
+/* התאמה לנייד (ריספונסיביות) */
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 25px 20px;
+    box-shadow: none; /* במובייל פחות צל, יותר נקי */
+    background: transparent;
+  }
+  
+  .auth-page {
+    background: white; /* במובייל אפשר רקע חלק */
+  }
+
+  .auth-logo {
+    font-size: 32px;
+  }
+}
