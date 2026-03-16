@@ -2,13 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLang, LangToggle } from "../context/LanguageContext";
 
-/*
-  FixMate - Book a Pro (with AI Chatbot Step 1)
-  Step 1: Photo upload + AI chatbot identifies issue
-  Step 2: Fill location + date + time
-  Step 3: Show professionals → book
-*/
-
 const IconBack = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>;
 const IconForward = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>;
 const IconCheck = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>;
@@ -21,10 +14,9 @@ const IconPin = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none
 const IconCalendar = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>;
 const IconClockLg = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>;
 const IconCamera = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>;
-const IconImage = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>;
 const IconSend = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>;
 
-const catIcons = { electricity:"\u26a1", plumbing:"\ud83d\udd27", painting:"\ud83c\udfa8", ac:"\u2744\ufe0f", locksmith:"\ud83d\udd11", renovation:"\ud83c\udfd7\ufe0f", carpentry:"\ud83e\ude9a", cleaning:"\ud83e\uddf9" };
+const catIcons = { electricity:"⚡", plumbing:"🔧", painting:"🎨", ac:"❄️", locksmith:"🔑", renovation:"🏗️", carpentry:"🪚", cleaning:"🧹" };
 
 const CAT_IDS = ["electricity","plumbing","painting","ac","locksmith","renovation","carpentry","cleaning"];
 const CAT_LABEL_KEYS = { electricity:"bp_cat_electricity", plumbing:"bp_cat_plumbing", painting:"bp_cat_painting", ac:"bp_cat_ac", locksmith:"bp_cat_locksmith", renovation:"bp_cat_renovation", carpentry:"bp_cat_carpentry", cleaning:"bp_cat_cleaning" };
@@ -40,33 +32,47 @@ const ISSUE_IDS = {
   cleaning: ["deep_clean","post_reno","windows","carpet"],
 };
 
-/* AI diagnosis simulation - maps keywords in image "analysis" to category+issue */
 const DIAGNOSIS_MAP = [
-  { cat: "plumbing", issue: "leak", keywords: ["water","leak","pipe","drip","wet","puddle","flood","damp","moisture"], en: { title: "Water Leak Detected", desc: "I can see signs of a water leak. This appears to be a plumbing issue — specifically a pipe or faucet leak. I recommend booking a plumber to inspect and fix this before it causes further damage." }, he: { title: "\u05d6\u05d5\u05d4\u05d4 \u05e0\u05d6\u05d9\u05dc\u05ea \u05de\u05d9\u05dd", desc: "\u05d0\u05e0\u05d9 \u05de\u05d6\u05d4\u05d4 \u05e1\u05d9\u05de\u05e0\u05d9\u05dd \u05dc\u05e0\u05d6\u05d9\u05dc\u05ea \u05de\u05d9\u05dd. \u05d6\u05d5 \u05e0\u05e8\u05d0\u05d9\u05ea \u05d1\u05e2\u05d9\u05d4 \u05e9\u05dc \u05d0\u05d9\u05e0\u05e1\u05d8\u05dc\u05e6\u05d9\u05d4 \u2014 \u05db\u05e0\u05e8\u05d0\u05d4 \u05e0\u05d6\u05d9\u05dc\u05d4 \u05d1\u05e6\u05e0\u05e8\u05ea \u05d0\u05d5 \u05d1\u05e8\u05d6. \u05de\u05d5\u05de\u05dc\u05e5 \u05dc\u05d4\u05d6\u05de\u05d9\u05df \u05e9\u05e8\u05d1\u05e8\u05d1 \u05dc\u05e4\u05e0\u05d9 \u05e9\u05d4\u05e0\u05d6\u05e7 \u05d9\u05d7\u05de\u05d9\u05e8." } },
-  { cat: "plumbing", issue: "clog", keywords: ["clog","drain","blocked","sink","toilet","overflow","backup"], en: { title: "Clogged Drain Detected", desc: "This looks like a clogged drain issue. The blockage could be in the pipes or the drainage system. A professional plumber can clear this quickly." }, he: { title: "\u05e0\u05d9\u05e7\u05d5\u05d6 \u05e1\u05ea\u05d5\u05dd \u05d6\u05d5\u05d4\u05d4", desc: "\u05d6\u05d4 \u05e0\u05e8\u05d0\u05d4 \u05db\u05e0\u05d9\u05e7\u05d5\u05d6 \u05e1\u05ea\u05d5\u05dd. \u05d4\u05d7\u05e1\u05d9\u05de\u05d4 \u05d9\u05db\u05d5\u05dc\u05d4 \u05dc\u05d4\u05d9\u05d5\u05ea \u05d1\u05e6\u05e0\u05e8\u05ea \u05d0\u05d5 \u05d1\u05de\u05e2\u05e8\u05db\u05ea \u05d4\u05e0\u05d9\u05e7\u05d5\u05d6. \u05e9\u05e8\u05d1\u05e8\u05d1 \u05de\u05e7\u05e6\u05d5\u05e2\u05d9 \u05d9\u05db\u05d5\u05dc \u05dc\u05e4\u05ea\u05d5\u05e8 \u05d0\u05ea \u05d6\u05d4 \u05de\u05d4\u05e8." } },
-  { cat: "electricity", issue: "short_circuit", keywords: ["spark","electric","wire","outlet","breaker","fuse","power","blackout","socket","switch"], en: { title: "Electrical Issue Detected", desc: "I can identify signs of an electrical problem — possibly a short circuit or faulty wiring. This requires a licensed electrician for safe repair. Do not attempt to fix this yourself." }, he: { title: "\u05ea\u05e7\u05dc\u05d4 \u05d7\u05e9\u05de\u05dc\u05d9\u05ea \u05d6\u05d5\u05d4\u05ea\u05d4", desc: "\u05d0\u05e0\u05d9 \u05de\u05d6\u05d4\u05d4 \u05e1\u05d9\u05de\u05e0\u05d9\u05dd \u05dc\u05ea\u05e7\u05dc\u05d4 \u05d7\u05e9\u05de\u05dc\u05d9\u05ea \u2014 \u05db\u05e0\u05e8\u05d0\u05d4 \u05e7\u05e6\u05e8 \u05d0\u05d5 \u05ea\u05d9\u05e7\u05d5\u05df \u05d7\u05d9\u05d5\u05d5\u05d8. \u05d6\u05d4 \u05d3\u05d5\u05e8\u05e9 \u05d7\u05e9\u05de\u05dc\u05d0\u05d9 \u05de\u05d5\u05e1\u05de\u05da. \u05d0\u05dc \u05ea\u05e0\u05e1\u05d4 \u05dc\u05ea\u05e7\u05df \u05dc\u05d1\u05d3." } },
-  { cat: "ac", issue: "ac_fault", keywords: ["ac","air condition","cold","cool","compressor","vent","filter","hvac","heat","warm"], en: { title: "AC Problem Detected", desc: "This appears to be an air conditioning issue. The unit may need servicing, gas refill, or component replacement. I recommend booking an AC technician." }, he: { title: "\u05ea\u05e7\u05dc\u05d4 \u05d1\u05de\u05d6\u05d2\u05df \u05d6\u05d5\u05d4\u05ea\u05d4", desc: "\u05d6\u05d4 \u05e0\u05e8\u05d0\u05d4 \u05db\u05ea\u05e7\u05dc\u05d4 \u05d1\u05de\u05d6\u05d2\u05df. \u05d9\u05d9\u05ea\u05db\u05df \u05e9\u05d4\u05de\u05db\u05e9\u05d9\u05e8 \u05e6\u05e8\u05d9\u05da \u05d8\u05d9\u05e4\u05d5\u05dc, \u05de\u05d9\u05dc\u05d5\u05d9 \u05d2\u05d6, \u05d0\u05d5 \u05d4\u05d7\u05dc\u05e4\u05ea \u05e8\u05db\u05d9\u05d1. \u05de\u05d5\u05de\u05dc\u05e5 \u05dc\u05d4\u05d6\u05de\u05d9\u05df \u05d8\u05db\u05e0\u05d0\u05d9 \u05de\u05d6\u05d2\u05e0\u05d9\u05dd." } },
-  { cat: "painting", issue: "plaster", keywords: ["paint","wall","crack","peel","stain","mold","damp","plaster","ceiling","patch"], en: { title: "Wall/Paint Damage Detected", desc: "I can see wall damage — this could be cracking, peeling paint, or plaster issues. A painter or plasterer can assess the damage and restore the surface." }, he: { title: "\u05e0\u05d6\u05e7 \u05d1\u05e7\u05d9\u05e8 / \u05e6\u05d1\u05e2 \u05d6\u05d5\u05d4\u05d4", desc: "\u05d0\u05e0\u05d9 \u05e8\u05d5\u05d0\u05d4 \u05e0\u05d6\u05e7 \u05d1\u05e7\u05d9\u05e8 \u2014 \u05d9\u05d9\u05ea\u05db\u05df \u05e9\u05d6\u05d4 \u05e1\u05d3\u05e7, \u05e7\u05d9\u05dc\u05d5\u05e3 \u05e6\u05d1\u05e2, \u05d0\u05d5 \u05d1\u05e2\u05d9\u05d4 \u05d1\u05d8\u05d9\u05d7. \u05e6\u05d1\u05e2\u05d9 \u05d0\u05d5 \u05d8\u05d9\u05d9\u05d7 \u05d9\u05db\u05d5\u05dc \u05dc\u05d4\u05e2\u05e8\u05d9\u05da \u05d5\u05dc\u05e9\u05e7\u05dd." } },
-  { cat: "locksmith", issue: "lock_replace", keywords: ["lock","door","key","stuck","broken","handle","latch","deadbolt","entry"], en: { title: "Lock/Door Issue Detected", desc: "This looks like a lock or door mechanism problem. A locksmith can repair or replace the lock and ensure your home is secure." }, he: { title: "\u05ea\u05e7\u05dc\u05d4 \u05d1\u05de\u05e0\u05e2\u05d5\u05dc / \u05d3\u05dc\u05ea \u05d6\u05d5\u05d4\u05ea\u05d4", desc: "\u05d6\u05d4 \u05e0\u05e8\u05d0\u05d4 \u05db\u05ea\u05e7\u05dc\u05d4 \u05d1\u05de\u05e0\u05e2\u05d5\u05dc \u05d0\u05d5 \u05d1\u05de\u05e0\u05d2\u05e0\u05d5\u05df \u05d4\u05d3\u05dc\u05ea. \u05de\u05e0\u05e2\u05d5\u05dc\u05df \u05d9\u05db\u05d5\u05dc \u05dc\u05ea\u05e7\u05df \u05d0\u05d5 \u05dc\u05d4\u05d7\u05dc\u05d9\u05e3 \u05d0\u05ea \u05d4\u05de\u05e0\u05e2\u05d5\u05dc." } },
-  { cat: "renovation", issue: "tiling", keywords: ["tile","floor","broken tile","grout","ceramic","marble","renovation"], en: { title: "Floor/Tile Damage Detected", desc: "I can see damaged flooring or tiles. This may require tile replacement or grouting work. A renovation professional can handle this repair." }, he: { title: "\u05e0\u05d6\u05e7 \u05d1\u05e8\u05e6\u05e4\u05d4 / \u05d0\u05e8\u05d9\u05d7\u05d9\u05dd \u05d6\u05d5\u05d4\u05d4", desc: "\u05d0\u05e0\u05d9 \u05e8\u05d5\u05d0\u05d4 \u05e0\u05d6\u05e7 \u05d1\u05e8\u05e6\u05e4\u05d4 \u05d0\u05d5 \u05d1\u05d0\u05e8\u05d9\u05d7\u05d9\u05dd. \u05d9\u05d9\u05ea\u05db\u05df \u05e9\u05e6\u05e8\u05d9\u05da \u05d4\u05d7\u05dc\u05e4\u05ea \u05d0\u05e8\u05d9\u05d7\u05d9\u05dd \u05d0\u05d5 \u05ea\u05d9\u05e7\u05d5\u05df \u05e8\u05d5\u05d1\u05d4. \u05d0\u05d9\u05e9 \u05e9\u05d9\u05e4\u05d5\u05e6\u05d9\u05dd \u05d9\u05db\u05d5\u05dc \u05dc\u05d8\u05e4\u05dc \u05d1\u05d6\u05d4." } },
-  { cat: "carpentry", issue: "furniture", keywords: ["wood","furniture","cabinet","shelf","drawer","closet","hinge","board"], en: { title: "Furniture/Carpentry Issue Detected", desc: "This appears to be a carpentry or furniture issue. Whether it's a broken cabinet, shelf, or door — a skilled carpenter can fix or build what you need." }, he: { title: "\u05ea\u05e7\u05dc\u05d4 \u05d1\u05e8\u05d4\u05d9\u05d8 / \u05e0\u05d2\u05e8\u05d5\u05ea \u05d6\u05d5\u05d4\u05ea\u05d4", desc: "\u05d6\u05d4 \u05e0\u05e8\u05d0\u05d4 \u05db\u05ea\u05e7\u05dc\u05d4 \u05d1\u05e0\u05d2\u05e8\u05d5\u05ea \u05d0\u05d5 \u05e8\u05d4\u05d9\u05d8. \u05d1\u05d9\u05df \u05d0\u05dd \u05d6\u05d4 \u05d0\u05e8\u05d5\u05df \u05e9\u05d1\u05d5\u05e8, \u05de\u05d3\u05e3, \u05d0\u05d5 \u05d3\u05dc\u05ea \u2014 \u05e0\u05d2\u05e8 \u05de\u05e7\u05e6\u05d5\u05e2\u05d9 \u05d9\u05db\u05d5\u05dc \u05dc\u05ea\u05e7\u05df \u05d0\u05d5 \u05dc\u05d1\u05e0\u05d5\u05ea." } },
+  { cat: "plumbing", issue: "leak", keywords: ["water","leak","pipe","drip","wet","puddle","flood","damp","moisture"],
+    en: { title: "Water Leak Detected", desc: "I can see signs of a water leak. This appears to be a plumbing issue — specifically a pipe or faucet leak. I recommend booking a plumber to inspect and fix this before it causes further damage." },
+    he: { title: "זוהתה נזילת מים", desc: "אני מזהה סימנים לנזילת מים. זו נראית בעיה של אינסטלציה — כנראה נזילה בצנרת או ברז. מומלץ להזמין שרברב לפני שהנזק יחמיר." } },
+  { cat: "plumbing", issue: "clog", keywords: ["clog","drain","blocked","sink","toilet","overflow","backup"],
+    en: { title: "Clogged Drain Detected", desc: "This looks like a clogged drain issue. The blockage could be in the pipes or the drainage system. A professional plumber can clear this quickly." },
+    he: { title: "ניקוז סתום זוהה", desc: "זה נראה כניקוז סתום. החסימה יכולה להיות בצנרת או במערכת הניקוז. שרברב מקצועי יכול לפתור את זה מהר." } },
+  { cat: "electricity", issue: "short_circuit", keywords: ["spark","electric","wire","outlet","breaker","fuse","power","blackout","socket","switch"],
+    en: { title: "Electrical Issue Detected", desc: "I can identify signs of an electrical problem — possibly a short circuit or faulty wiring. This requires a licensed electrician for safe repair. Do not attempt to fix this yourself." },
+    he: { title: "תקלה חשמלית זוהתה", desc: "אני מזהה סימנים לתקלה חשמלית — כנראה קצר או תיקון חיווט. זה דורש חשמלאי מוסמך. אל תנסה לתקן לבד." } },
+  { cat: "ac", issue: "ac_fault", keywords: ["ac","air condition","cold","cool","compressor","vent","filter","hvac","heat","warm"],
+    en: { title: "AC Problem Detected", desc: "This appears to be an air conditioning issue. The unit may need servicing, gas refill, or component replacement. I recommend booking an AC technician." },
+    he: { title: "תקלה במזגן זוהתה", desc: "זה נראה כתקלה במזגן. ייתכן שהמכשיר צריך טיפול, מילוי גז, או החלפת רכיב. מומלץ להזמין טכנאי מזגנים." } },
+  { cat: "painting", issue: "plaster", keywords: ["paint","wall","crack","peel","stain","mold","damp","plaster","ceiling","patch"],
+    en: { title: "Wall/Paint Damage Detected", desc: "I can see wall damage — this could be cracking, peeling paint, or plaster issues. A painter or plasterer can assess the damage and restore the surface." },
+    he: { title: "נזק בקיר / צבע זוהה", desc: "אני רואה נזק בקיר — ייתכן שזה סדק, קילוף צבע, או בעיה בטיח. צבעי או טייח יכול להעריך ולשקם." } },
+  { cat: "locksmith", issue: "lock_replace", keywords: ["lock","door","key","stuck","broken","handle","latch","deadbolt","entry"],
+    en: { title: "Lock/Door Issue Detected", desc: "This looks like a lock or door mechanism problem. A locksmith can repair or replace the lock and ensure your home is secure." },
+    he: { title: "תקלה במנעול / דלת זוהתה", desc: "זה נראה כתקלה במנעול או במנגנון הדלת. מנעולן יכול לתקן או להחליף את המנעול." } },
+  { cat: "renovation", issue: "tiling", keywords: ["tile","floor","broken tile","grout","ceramic","marble","renovation"],
+    en: { title: "Floor/Tile Damage Detected", desc: "I can see damaged flooring or tiles. This may require tile replacement or grouting work. A renovation professional can handle this repair." },
+    he: { title: "נזק ברצפה / אריחים זוהה", desc: "אני רואה נזק ברצפה או באריחים. ייתכן שצריך החלפת אריחים או תיקון רובה. איש שיפוצים יכול לטפל בזה." } },
+  { cat: "carpentry", issue: "furniture", keywords: ["wood","furniture","cabinet","shelf","drawer","closet","hinge","board"],
+    en: { title: "Furniture/Carpentry Issue Detected", desc: "This appears to be a carpentry or furniture issue. Whether it's a broken cabinet, shelf, or door — a skilled carpenter can fix or build what you need." },
+    he: { title: "תקלה ברהיט / נגרות זוהתה", desc: "זה נראה כתקלה בנגרות או רהיט. בין אם זה ארון שבור, מדף, או דלת — נגר מקצועי יכול לתקן או לבנות." } },
 ];
 
-/* Default fallback diagnosis */
 const DEFAULT_DIAG = { cat: "plumbing", issue: "general_plumb",
   en: { title: "Issue Identified", desc: "Based on my analysis, this appears to be a home maintenance issue. I recommend booking a professional to inspect and provide a proper assessment." },
-  he: { title: "\u05ea\u05e7\u05dc\u05d4 \u05d6\u05d5\u05d4\u05ea\u05d4", desc: "\u05e2\u05dc \u05e1\u05de\u05da \u05d4\u05e0\u05d9\u05ea\u05d5\u05d7 \u05e9\u05dc\u05d9, \u05d6\u05d5 \u05e0\u05e8\u05d0\u05d9\u05ea \u05ea\u05e7\u05dc\u05d4 \u05d1\u05ea\u05d7\u05d6\u05d5\u05e7\u05ea \u05d4\u05d1\u05d9\u05ea. \u05de\u05d5\u05de\u05dc\u05e5 \u05dc\u05d4\u05d6\u05de\u05d9\u05df \u05d1\u05e2\u05dc \u05de\u05e7\u05e6\u05d5\u05e2 \u05dc\u05d1\u05d3\u05d9\u05e7\u05d4 \u05d5\u05d4\u05e2\u05e8\u05db\u05d4." } };
+  he: { title: "תקלה זוהתה", desc: "על סמך הניתוח שלי, זו נראית תקלה בתחזוקת הבית. מומלץ להזמין בעל מקצוע לבדיקה והערכה." } };
 
 function getDiagnosis() {
   const rnd = Math.random();
-  if (rnd < 0.25) return DIAGNOSIS_MAP[0]; // leak
-  if (rnd < 0.40) return DIAGNOSIS_MAP[2]; // electrical
-  if (rnd < 0.55) return DIAGNOSIS_MAP[3]; // ac
-  if (rnd < 0.65) return DIAGNOSIS_MAP[1]; // clog
-  if (rnd < 0.75) return DIAGNOSIS_MAP[4]; // paint
-  if (rnd < 0.85) return DIAGNOSIS_MAP[5]; // lock
-  if (rnd < 0.92) return DIAGNOSIS_MAP[6]; // tile
-  return DIAGNOSIS_MAP[7]; // carpentry
+  if (rnd < 0.25) return DIAGNOSIS_MAP[0];
+  if (rnd < 0.40) return DIAGNOSIS_MAP[2];
+  if (rnd < 0.55) return DIAGNOSIS_MAP[3];
+  if (rnd < 0.65) return DIAGNOSIS_MAP[1];
+  if (rnd < 0.75) return DIAGNOSIS_MAP[4];
+  if (rnd < 0.85) return DIAGNOSIS_MAP[5];
+  if (rnd < 0.92) return DIAGNOSIS_MAP[6];
+  return DIAGNOSIS_MAP[7];
 }
 
 function getDiagnosisFromText(text) {
@@ -74,16 +80,15 @@ function getDiagnosisFromText(text) {
   for (const d of DIAGNOSIS_MAP) {
     if (d.keywords.some(k => lower.includes(k))) return d;
   }
-  // Hebrew keywords
   const heMap = [
-    { idx: 0, words: ["\u05e0\u05d6\u05d9\u05dc\u05d4","\u05de\u05d9\u05dd","\u05d3\u05dc\u05d9\u05e4\u05d4","\u05e8\u05d8\u05d9\u05d1\u05d5\u05ea","\u05e6\u05e0\u05e8\u05ea","\u05d1\u05e8\u05d6"] },
-    { idx: 1, words: ["\u05e1\u05ea\u05d9\u05de\u05d4","\u05e1\u05ea\u05d5\u05dd","\u05e0\u05d9\u05e7\u05d5\u05d6","\u05d0\u05e1\u05dc\u05d4","\u05e9\u05d9\u05e8\u05d5\u05ea\u05d9\u05dd"] },
-    { idx: 2, words: ["\u05d7\u05e9\u05de\u05dc","\u05e9\u05e7\u05e2","\u05e7\u05e6\u05e8","\u05d7\u05d5\u05d8","\u05de\u05ea\u05d2","\u05e0\u05ea\u05d9\u05da"] },
-    { idx: 3, words: ["\u05de\u05d6\u05d2\u05df","\u05e7\u05e8\u05d9\u05e8","\u05d7\u05dd","\u05de\u05e4\u05d5\u05d7\u05d4","\u05de\u05e7\u05e8\u05e8"] },
-    { idx: 4, words: ["\u05e6\u05d1\u05e2","\u05e7\u05d9\u05e8","\u05e1\u05d3\u05e7","\u05e7\u05d9\u05dc\u05d5\u05e3","\u05e2\u05d5\u05d1\u05e9","\u05d8\u05d9\u05d7"] },
-    { idx: 5, words: ["\u05de\u05e0\u05e2\u05d5\u05dc","\u05d3\u05dc\u05ea","\u05de\u05e4\u05ea\u05d7","\u05ea\u05e7\u05d5\u05e2"] },
-    { idx: 6, words: ["\u05e8\u05e6\u05e4\u05d4","\u05d0\u05e8\u05d9\u05d7","\u05e7\u05e8\u05de\u05d9\u05e7\u05d4","\u05e9\u05d9\u05e4\u05d5\u05e5"] },
-    { idx: 7, words: ["\u05e2\u05e5","\u05e8\u05d4\u05d9\u05d8","\u05d0\u05e8\u05d5\u05df","\u05de\u05d3\u05e3","\u05de\u05d2\u05d9\u05e8\u05d4"] },
+    { idx: 0, words: ["נזילה","מים","דליפה","רטיבות","צנרת","ברז"] },
+    { idx: 1, words: ["סתימה","סתום","ניקוז","אסלה","שירותים"] },
+    { idx: 2, words: ["חשמל","שקע","קצר","חוט","מתג","נתיך"] },
+    { idx: 3, words: ["מזגן","קריר","חם","מפוחה","מקרר"] },
+    { idx: 4, words: ["צבע","קיר","סדק","קילוף","עובש","טיח"] },
+    { idx: 5, words: ["מנעול","דלת","מפתח","תקוע"] },
+    { idx: 6, words: ["רצפה","אריח","קרמיקה","שיפוץ"] },
+    { idx: 7, words: ["עץ","רהיט","ארון","מדף","מגירה"] },
   ];
   for (const h of heMap) {
     if (h.words.some(w => lower.includes(w))) return DIAGNOSIS_MAP[h.idx];
@@ -101,67 +106,49 @@ const TIME_OPTIONS = [
 
 const fN = ["Yossi","Avi","Mohammad","Daniel","Shimon","Omar","Ron","Alex","Nir","Fadi","Amit","Boris","Tal","Sami","Yigal","Maria","Nadia","Eran","Kobi","Ran","Dov","Faris","Meir","Victor","Ilan"];
 const lN = ["Cohen","Levy","Hassan","Barak","Dahan","Said","Mizrachi","Petrov","Avraham","Nasser","Shalom","Kozlov","Regev","Halabi","Tzur","Ivanova","Kamal","Shapira","Azulay","Dror","Stern","Daher","Peretz","Rosen","Mor"];
-const fN_he = ["\u05d9\u05d5\u05e1\u05d9","\u05d0\u05d1\u05d9","\u05de\u05d5\u05d7\u05de\u05d3","\u05d3\u05e0\u05d9\u05d0\u05dc","\u05e9\u05de\u05e2\u05d5\u05df","\u05e2\u05d5\u05de\u05e8","\u05e8\u05d5\u05df","\u05d0\u05dc\u05db\u05e1","\u05e0\u05d9\u05e8","\u05e4\u05d0\u05d3\u05d9","\u05e2\u05de\u05d9\u05ea","\u05d1\u05d5\u05e8\u05d9\u05e1","\u05d8\u05dc","\u05e1\u05de\u05d9","\u05d9\u05d2\u05d0\u05dc","\u05de\u05e8\u05d9\u05d4","\u05e0\u05d0\u05d3\u05d9\u05d4","\u05e2\u05e8\u05df","\u05e7\u05d5\u05d1\u05d9","\u05e8\u05df","\u05d3\u05d1","\u05e4\u05d0\u05e8\u05e1","\u05de\u05d0\u05d9\u05e8","\u05d5\u05d9\u05e7\u05d8\u05d5\u05e8","\u05d0\u05d9\u05dc\u05df"];
-const lN_he = ["\u05db\u05d4\u05df","\u05dc\u05d5\u05d9","\u05d7\u05e1\u05df","\u05d1\u05e8\u05e7","\u05d3\u05d4\u05df","\u05e1\u05e2\u05d9\u05d3","\u05de\u05d6\u05e8\u05d7\u05d9","\u05e4\u05d8\u05e8\u05d5\u05d1","\u05d0\u05d1\u05e8\u05d4\u05dd","\u05e0\u05d0\u05e1\u05e8","\u05e9\u05dc\u05d5\u05dd","\u05e7\u05d5\u05d6\u05dc\u05d5\u05d1","\u05e8\u05d2\u05d1","\u05d7\u05dc\u05d1\u05d9","\u05e6\u05d5\u05e8","\u05d0\u05d9\u05d1\u05e0\u05d5\u05d1\u05d4","\u05db\u05de\u05d0\u05dc","\u05e9\u05e4\u05d9\u05e8\u05d0","\u05d0\u05d6\u05d5\u05dc\u05d0\u05d9","\u05d3\u05e8\u05d5\u05e8","\u05e9\u05d8\u05e8\u05df","\u05d3\u05d0\u05d4\u05e8","\u05e4\u05e8\u05e5","\u05e8\u05d5\u05d6\u05df","\u05de\u05d5\u05e8"];
+const fN_he = ["יוסי","אבי","מוחמד","דניאל","שמעון","עומר","רון","אלכס","ניר","פאדי","עמית","בוריס","טל","סמי","יגאל","מריה","נאדיה","ערן","קובי","רן","דב","פארס","מאיר","ויקטור","אילן"];
+const lN_he = ["כהן","לוי","חסן","ברק","דהן","סעיד","מזרחי","פטרוב","אברהם","נאסר","שלום","קוזלוב","רגב","חלבי","צור","איבנובה","כמאל","שפירא","אזולאי","דרור","שטרן","דאהר","פרץ","רוזן","מור"];
 
 function genPros(city, catId) {
   var curLang = "en"; try { curLang = localStorage.getItem("fixmate_lang") || "en"; } catch(e) {}
   var first = curLang === "he" ? fN_he : fN;
-  var last = curLang === "he" ? lN_he : lN;
+  var last  = curLang === "he" ? lN_he : lN;
   const s = (city + catId).split("").reduce((a, c) => a + c.charCodeAt(0), 0);
   return Array.from({ length: (s % 4) + 1 }, (_, i) => {
     const fi = (s + i * 7) % first.length, li = (s + i * 13) % last.length;
-    return {
-      id: s * 100 + i, name: first[fi] + " " + last[li],
-      rating: (4.4 + (((s + i) % 6) * 0.1)).toFixed(1),
-      reviews: 30 + ((s + i * 17) % 250), city,
-      price: `${100 + ((s + i) % 15) * 20}-${200 + ((s + i) % 15) * 30}`,
-      avatar: first[fi][0] + last[li][0],
-      expYears: 3 + ((s + i) % 18),
-      available: "confirmed",
-    };
+    return { id: s * 100 + i, name: first[fi] + " " + last[li], rating: (4.4 + (((s + i) % 6) * 0.1)).toFixed(1), reviews: 30 + ((s + i * 17) % 250), city, price: `${100 + ((s + i) % 15) * 20}-${200 + ((s + i) % 15) * 30}`, avatar: first[fi][0] + last[li][0], expYears: 3 + ((s + i) % 18), available: "confirmed" };
   });
 }
 
-const fld = (ok) => ({
-  width: "100%", padding: "13px 16px", borderRadius: 14,
-  border: ok ? "2px solid #2563EB" : "2px solid #EEF1F8",
-  background: "#F8FAFF", fontSize: 15,
-  color: ok ? "#1A2B4A" : "#94A3B8",
-  fontFamily: "'DM Sans',sans-serif", outline: "none",
-  transition: "all 0.25s", appearance: "none",
-  WebkitAppearance: "none", cursor: "pointer", boxSizing: "border-box",
-});
+const fld = (ok) => ({ width: "100%", padding: "13px 16px", borderRadius: 14, border: ok ? "2px solid #2563EB" : "2px solid #EEF1F8", background: "#F8FAFF", fontSize: 15, color: ok ? "#1A2B4A" : "#94A3B8", fontFamily: "'DM Sans',sans-serif", outline: "none", transition: "all 0.25s", appearance: "none", WebkitAppearance: "none", cursor: "pointer", boxSizing: "border-box" });
 
 export default function BookaPro() {
   const navigate = useNavigate();
   const { t, dir, lang } = useLang();
   const isRTL = dir === "rtl";
-  const isHe = lang === "he";
+  const isHe  = lang === "he";
 
   const [step, setStep] = useState(1);
-  const [cat, setCat] = useState(null);
-  const [issue, setIssue] = useState(null);
+  const [cat,  setCat ] = useState(null);
+  const [issue,setIssue] = useState(null);
 
-  // Chat state
-  const [msgs, setMsgs] = useState([]);
-  const [chatInput, setChatInput] = useState("");
-  const [analyzing, setAnalyzing] = useState(false);
-  const [diagnosis, setDiagnosis] = useState(null);
+  const [msgs,         setMsgs        ] = useState([]);
+  const [chatInput,    setChatInput   ] = useState("");
+  const [analyzing,    setAnalyzing   ] = useState(false);
+  const [diagnosis,    setDiagnosis   ] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const fileRef = useRef(null);
+  const fileRef    = useRef(null);
   const chatEndRef = useRef(null);
 
-  // Step 2+3 state
-  const [cityQ, setCityQ] = useState("");
-  const [city, setCity] = useState(null);
-  const [dd, setDd] = useState(false);
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
+  const [cityQ,   setCityQ  ] = useState("");
+  const [city,    setCity   ] = useState(null);
+  const [dd,      setDd     ] = useState(false);
+  const [date,    setDate   ] = useState("");
+  const [time,    setTime   ] = useState("");
   const [results, setResults] = useState(false);
-  const [modal, setModal] = useState(null);
-  const [ok, setOk] = useState(false);
-  const [desc, setDesc] = useState("");
+  const [modal,   setModal  ] = useState(null);
+  const [ok,      setOk     ] = useState(false);
+  const [desc,    setDesc   ] = useState("");
   const iRef = useRef(null);
   const dRef = useRef(null);
 
@@ -169,38 +156,30 @@ export default function BookaPro() {
   const ready = city && date && time;
   const today = new Date().toISOString().split("T")[0];
 
-  // Auto-scroll chat
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [msgs, analyzing]);
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, analyzing]);
 
-  // Close city dropdown on outside click
   useEffect(() => {
-    const h = (e) => {
-      if (dRef.current && !dRef.current.contains(e.target) && iRef.current && !iRef.current.contains(e.target))
-        setDd(false);
-    };
+    const h = (e) => { if (dRef.current && !dRef.current.contains(e.target) && iRef.current && !iRef.current.contains(e.target)) setDd(false); };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
-  // Initial bot greeting
   useEffect(() => {
     const greeting = isHe
-      ? "\u05e9\u05dc\u05d5\u05dd! \ud83d\udc4b \u05d0\u05e0\u05d9 \u05d4\u05e2\u05d5\u05d6\u05e8 \u05d4\u05d7\u05db\u05dd \u05e9\u05dc FixMate. \u05e6\u05dc\u05dd \u05d0\u05ea \u05d4\u05ea\u05e7\u05dc\u05d4 \u05d0\u05d5 \u05ea\u05d0\u05e8 \u05d0\u05d5\u05ea\u05d4 \u2014 \u05d5\u05d0\u05e0\u05d9 \u05d0\u05d6\u05d4\u05d4 \u05d0\u05ea \u05e1\u05d5\u05d2 \u05d4\u05d1\u05e2\u05d9\u05d4 \u05d5\u05d0\u05de\u05e6\u05d0 \u05dc\u05da \u05d1\u05e2\u05dc \u05de\u05e7\u05e6\u05d5\u05e2."
-      : "Hi there! \ud83d\udc4b I'm FixMate's smart assistant. Snap a photo of the issue or describe it \u2014 and I'll identify the problem and find you the right professional.";
+      ? "שלום! 👋 אני העוזר החכם של FixMate. צלם את התקלה או תאר אותה — ואני אזהה את סוג הבעיה ואמצא לך בעל מקצוע."
+      : "Hi there! 👋 I'm FixMate's smart assistant. Snap a photo of the issue or describe it — and I'll identify the problem and find you the right professional.";
     setMsgs([{ role: "bot", text: greeting }]);
   }, [isHe]);
 
-  const catLabel = cat ? t(CAT_LABEL_KEYS[cat]) : "";
-  const issueLabel = issue ? t(`bp_iss_${issue}`) : "";
+  const catLabel  = cat   ? t(CAT_LABEL_KEYS[cat]) : "";
+  const issueLabel= issue ? t(`bp_iss_${issue}`)   : "";
   const timeLabel = TIME_OPTIONS.find(ti => ti.value === time)?.label || "";
   const pros = city && cat ? genPros(city, cat) : [];
   const fmtDate = (d) => d ? new Date(d + "T00:00:00").toLocaleDateString(isHe ? "he-IL" : "en-US", { weekday: "short", month: "short", day: "numeric" }) : "";
 
   const goBack = () => {
     if (step === 2 && results) setResults(false);
-    else if (step === 2) { setStep(1); }
+    else if (step === 2) setStep(1);
     else navigate("/client/dashboard");
   };
 
@@ -223,32 +202,29 @@ export default function BookaPro() {
     setMsgs(prev => [...prev, { role: "user", text: txt }]);
     setChatInput("");
     const textDiag = getDiagnosisFromText(txt);
-    runAnalysis(textDiag);
+    runAnalysis(textDiag, txt);
   };
 
-  const runAnalysis = (textDiag) => {
+  /* ✅ תיקון: currentIsHe נשמר לפני setTimeout */
+  const runAnalysis = (textDiag, inputText) => {
     setAnalyzing(true);
+    // זיהוי שפה: לפי הטקסט שהוקלד, או לפי שפת האפליקציה
+    const textHasHebrew = inputText ? /[א-ת]/.test(inputText) : false;
+    const currentIsHe = textHasHebrew || lang === "he";
     const delay = 1500 + Math.random() * 1500;
     setTimeout(() => {
       const diag = textDiag || getDiagnosis();
       setDiagnosis(diag);
       setCat(diag.cat);
       setIssue(diag.issue);
-      const langData = isHe ? diag.he : diag.en;
+      const langData = currentIsHe ? diag.he : diag.en;
       const botMsg = `**${langData.title}** ${catIcons[diag.cat]}\n\n${langData.desc}`;
       setMsgs(prev => [...prev, { role: "bot", text: botMsg }]);
       setAnalyzing(false);
     }, delay);
   };
 
-  const confirmDiagnosis = () => {
-    setStep(2);
-    setCity(null);
-    setCityQ("");
-    setDate("");
-    setTime("");
-    setResults(false);
-  };
+  const confirmDiagnosis = () => { setStep(2); setCity(null); setCityQ(""); setDate(""); setTime(""); setResults(false); };
 
   const BackIcon = isRTL ? IconForward : IconBack;
 
@@ -271,7 +247,6 @@ export default function BookaPro() {
         @keyframes checkPop{0%{transform:scale(0)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
         @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
         .hc:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(37,99,235,.1);border-color:#93B4F5!important}
-        .hch:hover{transform:translateY(-1px);border-color:#93B4F5!important}
         .hp:hover{transform:translateY(-4px);box-shadow:0 12px 36px rgba(0,0,0,.08)}
         .hb:hover:not(:disabled){filter:brightness(1.06);transform:translateY(-1px)}
         .hdd:hover{background:#EEF2FF!important}
@@ -295,14 +270,14 @@ export default function BookaPro() {
           {[1, 2, 3].map((s, i) => (
             <div key={s} style={{ display: "flex", alignItems: "center" }}>
               <div style={{ width: 42, height: 42, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, flexShrink: 0, background: step >= s || (s === 3 && results) ? "#2563EB" : "#E2E8F0", color: step >= s || (s === 3 && results) ? "#FFF" : "#94A3B8", transition: "all .4s cubic-bezier(.4,0,.2,1)", boxShadow: (step === s || (s === 3 && results && step === 2)) ? "0 0 0 4px rgba(37,99,235,.15)" : "none" }}>
-                {(step > s || (s <= 2 && results)) ? <IconCheck /> : s === 1 ? "\ud83d\udcf7" : s === 2 ? "\ud83d\udccd" : "\ud83d\udc77"}
+                {(step > s || (s <= 2 && results)) ? <IconCheck /> : s === 1 ? "📷" : s === 2 ? "📍" : "👷"}
               </div>
               {i < 2 && <div style={{ width: 80, height: 3, background: step > s || (s === 1 && step >= 2) || (s === 2 && results) ? "#2563EB" : "#E2E8F0", transition: "all .4s", borderRadius: 2, margin: "0 8px" }} />}
             </div>
           ))}
         </div>
         <div style={{ display: "flex", justifyContent: "center", gap: 88, marginTop: 10 }}>
-          {[isHe ? "\u05e6\u05dc\u05dd \u05ea\u05e7\u05dc\u05d4" : "Snap Issue", isHe ? "\u05de\u05d9\u05e7\u05d5\u05dd \u05d5\u05d6\u05de\u05df" : "When & Where", isHe ? "\u05d1\u05d7\u05e8 \u05de\u05e7\u05e6\u05d5\u05e2\u05df" : "Choose Pro"].map((l, i) => (
+          {[isHe ? "צלם תקלה" : "Snap Issue", isHe ? "מיקום וזמן" : "When & Where", isHe ? "בחר מקצוען" : "Choose Pro"].map((l, i) => (
             <span key={i} style={{ fontSize: 12, fontWeight: step >= i + 1 ? 600 : 400, color: step >= i + 1 ? "#2563EB" : "#94A3B8", textAlign: "center", width: 80 }}>{l}</span>
           ))}
         </div>
@@ -310,24 +285,24 @@ export default function BookaPro() {
 
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "20px 24px 40px" }}>
 
-        {/* ==================== STEP 1: CHATBOT ==================== */}
+        {/* STEP 1 */}
         {step === 1 && (
           <div style={{ background: "#FFF", borderRadius: 20, border: "1px solid #E8ECF4", boxShadow: "0 4px 24px rgba(0,0,0,.03)", animation: "fadeUp .4s", overflow: "hidden", display: "flex", flexDirection: "column", height: "min(65vh, 540px)" }}>
             {/* Chat header */}
             <div style={{ padding: "16px 20px", borderBottom: "1px solid #E8ECF4", display: "flex", alignItems: "center", gap: 12 }}>
               <div style={{ width: 38, height: 38, borderRadius: "50%", background: "linear-gradient(135deg,#2563EB,#1D4ED8)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: 18 }}>{"\ud83e\udd16"}</span>
+                <span style={{ fontSize: 18 }}>🤖</span>
               </div>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: "#1A2B4A", fontFamily: isHe ? "'Heebo'" : "'Outfit'" }}>{isHe ? "\u05e2\u05d5\u05d6\u05e8 \u05d7\u05db\u05dd" : "Smart Assistant"}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#1A2B4A", fontFamily: isHe ? "'Heebo'" : "'Outfit'" }}>{isHe ? "עוזר חכם" : "Smart Assistant"}</div>
                 <div style={{ fontSize: 12, color: "#059669", display: "flex", alignItems: "center", gap: 4 }}>
                   <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#059669" }} />
-                  {isHe ? "\u05de\u05d5\u05db\u05df \u05dc\u05e0\u05d9\u05ea\u05d5\u05d7" : "Ready to analyze"}
+                  {isHe ? "מוכן לניתוח" : "Ready to analyze"}
                 </div>
               </div>
             </div>
 
-            {/* Chat messages */}
+            {/* Messages */}
             <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
               {msgs.map((m, i) => (
                 <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", animation: "fadeUp .3s" }}>
@@ -337,55 +312,39 @@ export default function BookaPro() {
                 </div>
               ))}
 
-              {/* Analyzing dots */}
               {analyzing && (
                 <div style={{ display: "flex", justifyContent: "flex-start", animation: "fadeUp .3s" }}>
                   <div style={{ padding: "14px 22px", borderRadius: "18px 18px 18px 4px", background: "#F0F4FF", display: "flex", gap: 5, alignItems: "center" }}>
                     {[0, 1, 2].map(d => (
                       <span key={d} style={{ width: 8, height: 8, borderRadius: "50%", background: "#2563EB", animation: `pulse 1.2s ease-in-out ${d * 0.2}s infinite` }} />
                     ))}
-                    <span style={{ fontSize: 13, color: "#7C8DB5", marginInlineStart: 8 }}>{isHe ? "\u05de\u05e0\u05ea\u05d7..." : "Analyzing..."}</span>
+                    <span style={{ fontSize: 13, color: "#7C8DB5", marginInlineStart: 8 }}>{isHe ? "מנתח..." : "Analyzing..."}</span>
                   </div>
                 </div>
               )}
 
-              {/* Confirm button after diagnosis */}
               {diagnosis && !analyzing && (
                 <div style={{ display: "flex", justifyContent: "center", marginTop: 8, animation: "fadeUp .4s" }}>
                   <button className="hb" onClick={confirmDiagnosis} style={{ padding: "14px 36px", borderRadius: 50, border: "none", background: "linear-gradient(135deg,#059669,#10B981)", color: "#FFF", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: isHe ? "'Heebo'" : "'Outfit'", boxShadow: "0 6px 24px rgba(5,150,105,.3)", display: "flex", alignItems: "center", gap: 8, transition: "all .3s" }}>
                     <IconCheck />
-                    {isHe ? `\u05d0\u05e9\u05e8! \u05ea\u05de\u05e6\u05d0 \u05dc\u05d9 ${t(CAT_LABEL_KEYS[diagnosis.cat])}` : `Got it! Find me a ${t(CAT_LABEL_KEYS[diagnosis.cat])}`}
+                    {isHe ? `אשר! תמצא לי ${t(CAT_LABEL_KEYS[diagnosis.cat])}` : `Got it! Find me a ${t(CAT_LABEL_KEYS[diagnosis.cat])}`}
                   </button>
                 </div>
               )}
-
               <div ref={chatEndRef} />
             </div>
 
-            {/* Input bar */}
+            {/* Input */}
             <div style={{ padding: "12px 16px", borderTop: "1px solid #E8ECF4", background: "#FAFBFE" }}>
               <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-                {/* Camera button */}
-                <button onClick={() => fileRef.current?.click()} style={{ width: 42, height: 42, borderRadius: 12, border: "2px solid #E2E8F0", background: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#2563EB", flexShrink: 0, transition: "all .2s" }} title={isHe ? "\u05e6\u05dc\u05dd \u05ea\u05de\u05d5\u05e0\u05d4" : "Upload photo"}>
+                <button onClick={() => fileRef.current?.click()} style={{ width: 42, height: 42, borderRadius: 12, border: "2px solid #E2E8F0", background: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#2563EB", flexShrink: 0 }}>
                   <IconCamera />
                 </button>
                 <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} style={{ display: "none" }} />
-
-                {/* Text input */}
-                <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, background: "#FFF", borderRadius: 14, border: "2px solid #EEF1F8", padding: "10px 14px", transition: "border-color .2s" }}>
-                  <input
-                    type="text"
-                    value={chatInput}
-                    onChange={e => setChatInput(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && !e.shiftKey && handleTextSend()}
-                    placeholder={isHe ? "\u05ea\u05d0\u05e8 \u05d0\u05ea \u05d4\u05ea\u05e7\u05dc\u05d4 \u05d0\u05d5 \u05e6\u05dc\u05dd..." : "Describe the issue or snap a photo..."}
-                    disabled={analyzing}
-                    style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontSize: 14, fontFamily: isHe ? "'Heebo','DM Sans'" : "'DM Sans'", color: "#1A2B4A", direction: dir, textAlign: isRTL ? "right" : "left" }}
-                  />
+                <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, background: "#FFF", borderRadius: 14, border: "2px solid #EEF1F8", padding: "10px 14px" }}>
+                  <input type="text" value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && handleTextSend()} placeholder={isHe ? "תאר את התקלה או צלם..." : "Describe the issue or snap a photo..."} disabled={analyzing} style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontSize: 14, fontFamily: isHe ? "'Heebo','DM Sans'" : "'DM Sans'", color: "#1A2B4A", direction: dir, textAlign: isRTL ? "right" : "left" }} />
                 </div>
-
-                {/* Send button */}
-                <button onClick={handleTextSend} disabled={!chatInput.trim() || analyzing} style={{ width: 42, height: 42, borderRadius: 12, border: "none", background: chatInput.trim() && !analyzing ? "linear-gradient(135deg,#2563EB,#1D4ED8)" : "#E2E8F0", color: chatInput.trim() && !analyzing ? "#FFF" : "#94A3B8", display: "flex", alignItems: "center", justifyContent: "center", cursor: chatInput.trim() && !analyzing ? "pointer" : "not-allowed", flexShrink: 0, transition: "all .2s" }}>
+                <button onClick={handleTextSend} disabled={!chatInput.trim() || analyzing} style={{ width: 42, height: 42, borderRadius: 12, border: "none", background: chatInput.trim() && !analyzing ? "linear-gradient(135deg,#2563EB,#1D4ED8)" : "#E2E8F0", color: chatInput.trim() && !analyzing ? "#FFF" : "#94A3B8", display: "flex", alignItems: "center", justifyContent: "center", cursor: chatInput.trim() && !analyzing ? "pointer" : "not-allowed", flexShrink: 0 }}>
                   <IconSend />
                 </button>
               </div>
@@ -393,36 +352,30 @@ export default function BookaPro() {
           </div>
         )}
 
-        {/* ==================== STEP 2: WHEN & WHERE + RESULTS ==================== */}
+        {/* STEP 2 */}
         {step === 2 && (
           <div style={{ animation: "fadeUp .4s" }}>
-            {/* Summary chips */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, background: "#EEF2FF", color: "#3B5BDB", fontSize: 13, fontWeight: 600 }}>{catIcons[cat]} {catLabel}</span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, background: "#EEF2FF", color: "#3B5BDB", fontSize: 13, fontWeight: 600 }}>{"\ud83d\udd27"} {issueLabel}</span>
-              {city && <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, background: "#F0FDF4", color: "#059669", fontSize: 13, fontWeight: 600 }}>{"\ud83d\udccd"} {city}</span>}
-              {date && <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, background: "#FFF7ED", color: "#C2410C", fontSize: 13, fontWeight: 600 }}>{"\ud83d\udcc5"} {fmtDate(date)}</span>}
-              {time && <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, background: "#F5F3FF", color: "#7C3AED", fontSize: 13, fontWeight: 600 }}>{"\ud83d\udd50"} {timeLabel}</span>}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, background: "#EEF2FF", color: "#3B5BDB", fontSize: 13, fontWeight: 600 }}>🔧 {issueLabel}</span>
+              {city && <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, background: "#F0FDF4", color: "#059669", fontSize: 13, fontWeight: 600 }}>📍 {city}</span>}
+              {date && <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, background: "#FFF7ED", color: "#C2410C", fontSize: 13, fontWeight: 600 }}>📅 {fmtDate(date)}</span>}
+              {time && <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, background: "#F5F3FF", color: "#7C3AED", fontSize: 13, fontWeight: 600 }}>🕐 {timeLabel}</span>}
             </div>
 
-            {/* FORM */}
             {results === false && (
               <div style={{ background: "#FFF", borderRadius: 20, border: "1px solid #E8ECF4", padding: "28px 24px", marginBottom: 20, boxShadow: "0 4px 24px rgba(0,0,0,.03)" }}>
                 <h2 style={{ fontFamily: "'Outfit'", fontSize: 22, fontWeight: 700, color: "#1A2B4A", marginBottom: 6 }}>{t("bp_when_where")}</h2>
                 <p style={{ fontSize: 14, color: "#7C8DB5", marginBottom: 28 }}>{t("bp_when_where_sub")}</p>
 
-                {/* Location */}
                 <div style={{ marginBottom: 24 }}>
                   <label style={{ fontSize: 13, fontWeight: 600, color: "#4A5568", display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <span style={{ width: 28, height: 28, borderRadius: 8, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563EB" }}><IconPin /></span>{t("bp_location")}
                   </label>
                   <div style={{ position: "relative" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#F8FAFF", borderRadius: 14, border: dd ? "2px solid #2563EB" : "2px solid #EEF1F8", padding: "13px 16px", transition: "all .25s", boxShadow: dd ? "0 0 0 4px rgba(37,99,235,.08)" : "none" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#F8FAFF", borderRadius: 14, border: dd ? "2px solid #2563EB" : "2px solid #EEF1F8", padding: "13px 16px", transition: "all .25s" }}>
                       <span style={{ color: dd ? "#2563EB" : "#94A3B8", flexShrink: 0, display: "flex" }}><IconSearch /></span>
-                      <input ref={iRef} type="text" placeholder={t("bp_search_city")} value={cityQ}
-                        onChange={e => { setCityQ(e.target.value); setDd(true); if (city) setCity(null); }}
-                        onFocus={() => setDd(true)}
-                        style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontSize: 15, fontFamily: "'DM Sans'", color: "#1A2B4A", direction: "ltr", textAlign: isRTL ? "right" : "left" }} />
+                      <input ref={iRef} type="text" placeholder={t("bp_search_city")} value={cityQ} onChange={e => { setCityQ(e.target.value); setDd(true); if (city) setCity(null); }} onFocus={() => setDd(true)} style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontSize: 15, fontFamily: "'DM Sans'", color: "#1A2B4A", direction: "ltr", textAlign: isRTL ? "right" : "left" }} />
                       {cityQ && <button onClick={() => { setCity(null); setCityQ(""); iRef.current?.focus(); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#94A3B8", display: "flex", padding: 2 }}><IconX /></button>}
                     </div>
                     {dd && (
@@ -441,7 +394,6 @@ export default function BookaPro() {
                   </div>
                 </div>
 
-                {/* Date + Time */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 28 }}>
                   <div>
                     <label style={{ fontSize: 13, fontWeight: 600, color: "#4A5568", display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -455,15 +407,9 @@ export default function BookaPro() {
                     </label>
                     <select value={time} onChange={e => setTime(e.target.value)} style={{ ...fld(!!time), backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: isRTL ? "left 16px center" : "right 16px center", [isRTL ? "paddingLeft" : "paddingRight"]: 40 }}>
                       <option value="" disabled>{t("bp_select_time")}</option>
-                      <optgroup label={t("bp_morning")}>
-                        {TIME_OPTIONS.filter(ti => parseInt(ti.value) < 12).map(ti => <option key={ti.value} value={ti.value}>{ti.label}</option>)}
-                      </optgroup>
-                      <optgroup label={t("bp_afternoon")}>
-                        {TIME_OPTIONS.filter(ti => parseInt(ti.value) >= 12 && parseInt(ti.value) < 16).map(ti => <option key={ti.value} value={ti.value}>{ti.label}</option>)}
-                      </optgroup>
-                      <optgroup label={t("bp_evening")}>
-                        {TIME_OPTIONS.filter(ti => parseInt(ti.value) >= 16).map(ti => <option key={ti.value} value={ti.value}>{ti.label}</option>)}
-                      </optgroup>
+                      <optgroup label={t("bp_morning")}>{TIME_OPTIONS.filter(ti => parseInt(ti.value) < 12).map(ti => <option key={ti.value} value={ti.value}>{ti.label}</option>)}</optgroup>
+                      <optgroup label={t("bp_afternoon")}>{TIME_OPTIONS.filter(ti => parseInt(ti.value) >= 12 && parseInt(ti.value) < 16).map(ti => <option key={ti.value} value={ti.value}>{ti.label}</option>)}</optgroup>
+                      <optgroup label={t("bp_evening")}>{TIME_OPTIONS.filter(ti => parseInt(ti.value) >= 16).map(ti => <option key={ti.value} value={ti.value}>{ti.label}</option>)}</optgroup>
                     </select>
                   </div>
                 </div>
@@ -474,10 +420,9 @@ export default function BookaPro() {
               </div>
             )}
 
-            {/* RESULTS */}
             {results === true && city && (
               <div style={{ background: "#FFF", borderRadius: 20, border: "1px solid #E8ECF4", padding: "28px 24px", boxShadow: "0 4px 24px rgba(0,0,0,.03)", animation: "fadeUp .4s" }}>
-                <h2 style={{ fontFamily: "'Outfit'", fontSize: 22, fontWeight: 700, color: "#1A2B4A", marginBottom: 6 }}>{t("bp_available_in")} {city} {"\ud83c\udfc6"}</h2>
+                <h2 style={{ fontFamily: "'Outfit'", fontSize: 22, fontWeight: 700, color: "#1A2B4A", marginBottom: 6 }}>{t("bp_available_in")} {city} 🏆</h2>
                 <p style={{ fontSize: 14, color: "#7C8DB5", marginBottom: 20 }}>{t("bp_found")} <strong style={{ color: "#2563EB" }}>{pros.length}</strong> {pros.length > 1 ? t("bp_professionals") : t("bp_professional")} {t("bp_for")} <strong>{fmtDate(date)}</strong> {t("bp_at")} <strong>{timeLabel}</strong></p>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(270px,1fr))", gap: 16 }}>
                   {pros.map(p => (
@@ -492,8 +437,8 @@ export default function BookaPro() {
                       <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
                         <div style={{ fontSize: 13, color: "#7C8DB5", display: "flex", alignItems: "center", gap: 5 }}><IconLocation />{p.city}<span style={{ margin: "0 6px", color: "#D1D5DB" }}>|</span><IconClock />{p.expYears} {t("bp_yrs_exp")}</div>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <span style={{ fontSize: 14, fontWeight: 700, color: "#2563EB" }}>{"\u20aa"}{p.price}</span>
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600, color: "#059669", background: "#ECFDF5", padding: "4px 10px", borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: "50%", background: "#059669" }} />{"\ud83d\udcc5"} {fmtDate(date)}</span>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: "#2563EB" }}>₪{p.price}</span>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600, color: "#059669", background: "#ECFDF5", padding: "4px 10px", borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: "50%", background: "#059669" }} />📅 {fmtDate(date)}</span>
                         </div>
                       </div>
                       <button className="hb" onClick={() => setModal(p)} style={{ width: "100%", padding: "11px 20px", borderRadius: 12, border: "none", background: "linear-gradient(135deg,#2563EB,#1D4ED8)", color: "#FFF", fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "all .2s" }}>{t("bp_book_now")}</button>
@@ -514,17 +459,12 @@ export default function BookaPro() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
               <div>
                 <h3 style={{ fontFamily: "'Outfit'", fontSize: 22, fontWeight: 700, color: "#1A2B4A" }}>{t("bp_confirm_title")}</h3>
-                <p style={{ fontSize: 14, color: "#7C8DB5", marginTop: 4 }}>{modal.name} {"\u2014"} {catLabel}</p>
+                <p style={{ fontSize: 14, color: "#7C8DB5", marginTop: 4 }}>{modal.name} — {catLabel}</p>
               </div>
               <button onClick={() => setModal(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#94A3B8", padding: 4 }}><IconX /></button>
             </div>
             <div style={{ background: "#F8FAFF", borderRadius: 14, padding: "18px 20px", marginBottom: 20 }}>
-              {[
-                { icon: <IconPin />, color: "#2563EB", text: city },
-                { icon: <IconCalendar />, color: "#C2410C", text: fmtDate(date) },
-                { icon: <IconClockLg />, color: "#7C3AED", text: timeLabel },
-                { icon: <span style={{ fontSize: 16 }}>{catIcons[cat]}</span>, color: null, text: `${catLabel} \u2014 ${issueLabel}` },
-              ].map((r, i) => (
+              {[{ icon: <IconPin />, color: "#2563EB", text: city }, { icon: <IconCalendar />, color: "#C2410C", text: fmtDate(date) }, { icon: <IconClockLg />, color: "#7C3AED", text: timeLabel }, { icon: <span style={{ fontSize: 16 }}>{catIcons[cat]}</span>, color: null, text: `${catLabel} — ${issueLabel}` }].map((r, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, padding: "6px 0" }}>
                   <span style={{ color: r.color, display: "flex" }}>{r.icon}</span>
                   <span style={{ color: "#4A5568" }}><strong>{r.text}</strong></span>
@@ -535,25 +475,22 @@ export default function BookaPro() {
               <label style={{ fontSize: 13, fontWeight: 600, color: "#4A5568", marginBottom: 6, display: "block" }}>{t("bp_notes")}</label>
               <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder={t("bp_notes_placeholder")} style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: "1.5px solid #E2E8F0", fontSize: 14, color: "#1A2B4A", outline: "none", resize: "vertical", minHeight: 80, boxSizing: "border-box", fontFamily: "inherit", direction: dir }} />
             </div>
-
-            {/* Cancellation Policy */}
             <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 14, padding: "16px 18px", marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <span style={{ fontSize: 18 }}>{"\u26a0\ufe0f"}</span>
+                <span style={{ fontSize: 18 }}>⚠️</span>
                 <span style={{ fontSize: 14, fontWeight: 700, color: "#92400E" }}>{t("bp_cancel_policy")}</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                  <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#ECFDF5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12 }}>{"\u2705"}</span>
-                  <span style={{ fontSize: 13, color: "#4A5568", lineHeight: 1.5 }}>{isHe ? <>{"\u05d1\u05d9\u05d8\u05d5\u05dc"} <strong style={{ color: "#059669" }}>{t("bp_cancel_free")}</strong> {t("bp_cancel_before")} {"\u2014"} <strong style={{ color: "#059669" }}>{t("bp_cancel_free_label")}</strong></> : <>Cancel <strong style={{ color: "#059669" }}>{t("bp_cancel_free")}</strong> {t("bp_cancel_before")} {"\u2014"} <strong style={{ color: "#059669" }}>{t("bp_cancel_free_label")}</strong></>}</span>
+                  <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#ECFDF5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12 }}>✅</span>
+                  <span style={{ fontSize: 13, color: "#4A5568", lineHeight: 1.5 }}>{isHe ? <>ביטול <strong style={{ color: "#059669" }}>{t("bp_cancel_free")}</strong> {t("bp_cancel_before")} — <strong style={{ color: "#059669" }}>{t("bp_cancel_free_label")}</strong></> : <>Cancel <strong style={{ color: "#059669" }}>{t("bp_cancel_free")}</strong> {t("bp_cancel_before")} — <strong style={{ color: "#059669" }}>{t("bp_cancel_free_label")}</strong></>}</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                  <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#FEF2F2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12 }}>{"\ud83d\udcb0"}</span>
-                  <span style={{ fontSize: 13, color: "#4A5568", lineHeight: 1.5 }}>{isHe ? <>{"\u05d1\u05d9\u05d8\u05d5\u05dc"} <strong style={{ color: "#DC2626" }}>{t("bp_cancel_paid")}</strong> {t("bp_cancel_before")} {"\u2014"} <strong style={{ color: "#DC2626" }}>{t("bp_cancel_paid_label")}</strong></> : <>Cancel <strong style={{ color: "#DC2626" }}>{t("bp_cancel_paid")}</strong> {t("bp_cancel_before")} {"\u2014"} <strong style={{ color: "#DC2626" }}>{t("bp_cancel_paid_label")}</strong></>}</span>
+                  <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#FEF2F2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12 }}>💰</span>
+                  <span style={{ fontSize: 13, color: "#4A5568", lineHeight: 1.5 }}>{isHe ? <>ביטול <strong style={{ color: "#DC2626" }}>{t("bp_cancel_paid")}</strong> {t("bp_cancel_before")} — <strong style={{ color: "#DC2626" }}>{t("bp_cancel_paid_label")}</strong></> : <>Cancel <strong style={{ color: "#DC2626" }}>{t("bp_cancel_paid")}</strong> {t("bp_cancel_before")} — <strong style={{ color: "#DC2626" }}>{t("bp_cancel_paid_label")}</strong></>}</span>
                 </div>
               </div>
             </div>
-
             <button onClick={() => { setModal(null); setOk(true); setTimeout(() => { setOk(false); navigate("/client/dashboard"); }, 3000); }} style={{ width: "100%", padding: "16px", borderRadius: 14, border: "none", background: "linear-gradient(135deg,#2563EB,#1D4ED8)", color: "#FFF", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit'", boxShadow: "0 6px 24px rgba(37,99,235,.3)", display: "block" }}>{t("bp_confirm_btn")}</button>
           </div>
         </div>
