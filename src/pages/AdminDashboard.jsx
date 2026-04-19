@@ -15,17 +15,24 @@
  *  GET  /api/admin/orders
  */
 
-import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { getLang, getDir } from "../context/LanguageContext";
+/* ═══════════════════════════════════════════════
+   ייבואים - הכלים שצריך
+   ═══════════════════════════════════════════════ */
+import { useState, useEffect, useRef } from "react";          // useState=זיכרון | useEffect=הרצה | useRef=הפניה
+import { useNavigate } from "react-router-dom";                // הוק לניווט
+import { getLang, getDir } from "../context/LanguageContext";  // כלי שפה
 
+// ─── הוק מותאם לשימוש בשפה - מחזיר isHe, L, dir ───
 const useL = () => {
-  const lang = getLang();
-  const isHe = lang === "he";
-  return { isHe, L: (en, he) => (isHe ? he : en), dir: getDir() };
+  const lang = getLang();                                              // השפה הנוכחית
+  const isHe = lang === "he";                                          // האם עברית?
+  return { isHe, L: (en, he) => (isHe ? he : en), dir: getDir() };     // פונקציית L לבחירת טקסט לפי שפה
 };
 
-/* ─── Icons ─── */
+/* ═══════════════════════════════════════════════
+   אייקונים - כל אחד מבוסס על רכיב Svg משותף
+   ═══════════════════════════════════════════════ */
+// רכיב בסיסי - מקבל "ch" (children - ציור פנימי), גודל, עובי קו
 const Svg = ({ ch, s = 18, w = 2 }) => (
   <svg width={s} height={s} viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth={w}
@@ -33,41 +40,50 @@ const Svg = ({ ch, s = 18, w = 2 }) => (
     {ch}
   </svg>
 );
-const IcoGrid   = () => <Svg ch={<><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></>}/>;
-const IcoUsers  = () => <Svg ch={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>}/>;
-const IcoShield = () => <Svg ch={<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>}/>;
-const IcoAlert  = () => <Svg ch={<><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>}/>;
-const IcoClip   = () => <Svg ch={<><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></>}/>;
-const IcoDollar = () => <Svg ch={<><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>}/>;
-const IcoCheck  = () => <Svg s={14} ch={<polyline points="20 6 9 17 4 12"/>}/>;
-const IcoX      = () => <Svg s={14} ch={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>}/>;
-const IcoEye    = () => <Svg s={14} ch={<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}/>;
-const IcoBan    = () => <Svg s={14} ch={<><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></>}/>;
-const IcoSearch = () => <Svg s={15} ch={<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>}/>;
-const IcoTrend  = () => <Svg s={14} ch={<><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>}/>;
-const IcoLogout = () => <Svg s={17} ch={<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>}/>;
-const IcoWrench = () => <Svg s={18} ch={<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>}/>;
-const IcoChevR  = () => <Svg s={14} ch={<polyline points="9 18 15 12 9 6"/>}/>;
-const IcoBack   = () => <Svg s={15} ch={<polyline points="15 18 9 12 15 6"/>}/>;
-const IcoStar   = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="#FBBF24" stroke="#FBBF24" strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
-const IcoMail   = () => <Svg s={13} ch={<><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></>}/>;
-const IcoPhone  = () => <Svg s={13} ch={<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>}/>;
-const IcoRefresh= () => <Svg s={14} ch={<><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></>}/>;
+const IcoGrid   = () => <Svg ch={<><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></>}/>;                      // רשת 2x2 - לסקירה כללית
+const IcoUsers  = () => <Svg ch={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>}/>;                                // 2 משתמשים - לרשימת משתמשים
+const IcoShield = () => <Svg ch={<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>}/>;                                                                                                                                         // מגן - לאישורים
+const IcoAlert  = () => <Svg ch={<><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>}/>;                                                                          // סימן קריאה - לתלונות
+const IcoClip   = () => <Svg ch={<><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></>}/>;                                                       // לוח - להזמנות
+const IcoDollar = () => <Svg ch={<><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>}/>;                                                                                       // דולר - להכנסות
+const IcoCheck  = () => <Svg s={14} ch={<polyline points="20 6 9 17 4 12"/>}/>;                                                                                                                                                      // וי - לאישור
+const IcoX      = () => <Svg s={14} ch={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>}/>;                                                                                                          // X - לדחייה
+const IcoEye    = () => <Svg s={14} ch={<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}/>;                                                                                            // עין - לצפייה
+const IcoBan    = () => <Svg s={14} ch={<><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></>}/>;                                                                                                  // איסור - להשעיית משתמש
+const IcoSearch = () => <Svg s={15} ch={<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>}/>;                                                                                                        // זכוכית מגדלת - לחיפוש
+const IcoTrend  = () => <Svg s={14} ch={<><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>}/>;                                                                                              // גרף מגמה - לסטטיסטיקה
+const IcoLogout = () => <Svg s={17} ch={<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>}/>;                                                      // חץ יציאה
+const IcoWrench = () => <Svg s={18} ch={<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>}/>;                      // מפתח ברגים - לוגו
+const IcoChevR  = () => <Svg s={14} ch={<polyline points="9 18 15 12 9 6"/>}/>;                                                                                                                                                      // חץ ימינה
+const IcoBack   = () => <Svg s={15} ch={<polyline points="15 18 9 12 15 6"/>}/>;                                                                                                                                                     // חץ חזרה
+const IcoStar   = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="#FBBF24" stroke="#FBBF24" strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;   // כוכב
+const IcoMail   = () => <Svg s={13} ch={<><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></>}/>;                                                          // מעטפה
+const IcoPhone  = () => <Svg s={13} ch={<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>}/>;    // טלפון
+const IcoRefresh= () => <Svg s={14} ch={<><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></>}/>;                                                                                                // רענון
 
-/* Activity SVG icons */
-const ActUser   = () => <Svg s={17} ch={<><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>}/>;
-const ActWrench = () => <Svg s={17} ch={<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>}/>;
-const ActAlert  = () => <Svg s={17} ch={<><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>}/>;
-const ActCheck  = () => <Svg s={17} w={2.5} ch={<polyline points="20 6 9 17 4 12"/>}/>;
-const ActDollar = () => <Svg s={17} ch={<><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>}/>;
+/* ─── אייקוני פעילות (לפיד הפעילות) ─── */
+const ActUser   = () => <Svg s={17} ch={<><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>}/>;                                                                                                   // משתמש חדש
+const ActWrench = () => <Svg s={17} ch={<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>}/>;                        // בקשה ממקצוען
+const ActAlert  = () => <Svg s={17} ch={<><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>}/>;                                                                     // תלונה חדשה
+const ActCheck  = () => <Svg s={17} w={2.5} ch={<polyline points="20 6 9 17 4 12"/>}/>;                                                                                                                                                // הזמנה הושלמה
+const ActDollar = () => <Svg s={17} ch={<><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>}/>;                                                                                   // אבן דרך הכנסה
 
-/* ─── Mock Data ─── */
+/* ═══════════════════════════════════════════════
+   נתוני דמה (עד שיש backend אמיתי)
+   ═══════════════════════════════════════════════ */
+// ─── סטטיסטיקות ראשיות של המערכת ───
 const STATS = {
-  totalUsers: 1284, totalPros: 318, totalOrders: 4720,
-  monthRevenue: 128400, openComplaints: 7, pendingApprovals: 4,
-  ordersToday: 38, growth: 12,
+  totalUsers: 1284,           // סה"כ משתמשים
+  totalPros: 318,              // סה"כ בעלי מקצוע פעילים
+  totalOrders: 4720,           // סה"כ הזמנות
+  monthRevenue: 128400,        // הכנסה חודשית בש"ח
+  openComplaints: 7,           // תלונות פתוחות
+  pendingApprovals: 4,         // בעלי מקצוע ממתינים לאישור
+  ordersToday: 38,             // הזמנות היום
+  growth: 12,                  // אחוז צמיחה
 };
 
+// ─── בעלי מקצוע שממתינים לאישור מנהל ───
 const PENDING_PROS = [
   { id: "p1", name: "Yossi Azulay",  nameHe: "יוסי אזולאי",  trade: "Electrician",   tradeHe: "חשמלאי",        city: "Tel Aviv",   cityHe: "תל אביב",  phone: "+972-52-100-1111", email: "yossi@email.com", exp: "8 years",  expHe: "8 שנים",  joined: "Mar 10, 2026", docs: 3, avatar: "Y" },
   { id: "p2", name: "Kobi Mansour",  nameHe: "קובי מנסור",    trade: "Plumber",       tradeHe: "אינסטלטור",     city: "Haifa",      cityHe: "חיפה",      phone: "+972-54-200-2222", email: "kobi@email.com",  exp: "5 years",  expHe: "5 שנים",  joined: "Mar 11, 2026", docs: 2, avatar: "K" },
@@ -75,6 +91,7 @@ const PENDING_PROS = [
   { id: "p4", name: "Avi Cohen",     nameHe: "אבי כהן",        trade: "Handyman",      tradeHe: "כל-בו",         city: "Beer Sheva", cityHe: "באר שבע",   phone: "+972-53-400-4444", email: "avi@email.com",   exp: "3 years",  expHe: "3 שנים",  joined: "Mar 13, 2026", docs: 2, avatar: "A" },
 ];
 
+// ─── רשימת תלונות (מלקוחות ומבעלי מקצוע) ───
 const COMPLAINTS = [
   { id: "c1", from: "Sarah Cohen",   fromHe: "שרה כהן",      role: "Client", roleHe: "לקוח",      subject: "Pro didn't show up",          subjectHe: "בעל המקצוע לא הגיע",       status: "open",     priority: "high",   date: "Mar 12, 2026", orderId: "ORD-2050", assignedTo: null       },
   { id: "c2", from: "David Mizrahi", fromHe: "דוד מזרחי",    role: "Pro",    roleHe: "בעל מקצוע", subject: "Client cancelled last minute", subjectHe: "לקוח ביטל ברגע האחרון",    status: "open",     priority: "medium", date: "Mar 11, 2026", orderId: "ORD-2048", assignedTo: null       },
@@ -83,6 +100,7 @@ const COMPLAINTS = [
   { id: "c5", from: "Rina Goldberg", fromHe: "רינה גולדברג",  role: "Client", roleHe: "לקוח",      subject: "Poor quality of work",         subjectHe: "איכות עבודה ירודה",         status: "resolved", priority: "medium", date: "Mar 7, 2026",  orderId: "ORD-2039", assignedTo: "Admin 1" },
 ];
 
+// ─── רשימת משתמשים במערכת (לקוחות ובעלי מקצוע) ───
 const USERS = [
   { id: "u1", name: "Sarah Cohen",   nameHe: "שרה כהן",     role: "client", roleHe: "לקוח",      email: "sarah@email.com", city: "Tel Aviv",  cityHe: "תל אביב", orders: 8,   joined: "Jan 5, 2026",  status: "active",    avatar: "S", rating: null },
   { id: "u2", name: "Moshe Peretz",  nameHe: "משה פרץ",     role: "client", roleHe: "לקוח",      email: "moshe@email.com", city: "Ramat Gan", cityHe: "רמת גן",  orders: 3,   joined: "Feb 1, 2026",  status: "active",    avatar: "M", rating: null },
@@ -92,6 +110,7 @@ const USERS = [
   { id: "u6", name: "Amit Levy",     nameHe: "עמית לוי",    role: "pro",    roleHe: "בעל מקצוע", email: "amit@email.com",  city: "Haifa",     cityHe: "חיפה",    orders: 89,  joined: "Sep 14, 2025", status: "active",    avatar: "A", rating: 4.5  },
 ];
 
+// ─── הזמנות אחרונות במערכת ───
 const RECENT_ORDERS = [
   { id: "ORD-2055", client: "Maya Shapira", clientHe: "מאיה שפירא", pro: "David Mizrahi", proHe: "דוד מזרחי",  service: "Electrical panel", serviceHe: "לוח חשמל",   price: 550, status: "in_progress", date: "Mar 13" },
   { id: "ORD-2054", client: "Ran Biton",    clientHe: "רן ביטון",    pro: "Amit Levy",     proHe: "עמית לוי",   service: "Ceiling fan",      serviceHe: "מאוורר תקרה", price: 480, status: "pending",     date: "Mar 13" },
@@ -100,6 +119,7 @@ const RECENT_ORDERS = [
   { id: "ORD-2051", client: "Amit Levy",    clientHe: "עמית לוי",   pro: "Kobi Green",    proHe: "קובי גרין",  service: "Pipe fix",         serviceHe: "תיקון צינור",  price: 380, status: "cancelled",   date: "Mar 11" },
 ];
 
+// ─── פיד פעילות - מה קרה במערכת לאחרונה ───
 const ACTIVITY = [
   { id: 1, Icon: ActUser,    color: "#3B82F6", bg: "#EFF6FF", text: { en: "New client Sarah Cohen registered",          he: "לקוח חדש שרה כהן נרשמה"              }, time: { en: "2 min ago",  he: "לפני 2 דקות"  } },
   { id: 2, Icon: ActWrench,  color: "#F59E0B", bg: "#FFFBEB", text: { en: "Pro Yossi Azulay submitted approval request", he: "יוסי אזולאי הגיש בקשת אישור"         }, time: { en: "15 min ago", he: "לפני 15 דקות" } },
@@ -108,64 +128,130 @@ const ACTIVITY = [
   { id: 5, Icon: ActDollar,  color: "#8B5CF6", bg: "#F5F3FF", text: { en: "Revenue milestone: ₪128,000 this month",      he: "אבן דרך הכנסה: ₪128,000 החודש"       }, time: { en: "Today",      he: "היום"          } },
 ];
 
-/* ─── status helpers ─── */
+/* ─── צבעי סטטוס להזמנות ─── */
 const ORDER_STATUS = {
-  pending:     { bg: "#FEF3C7", color: "#92400E" },
-  in_progress: { bg: "#EDE9FE", color: "#5B21B6" },
-  done:        { bg: "#D1FAE5", color: "#065F46" },
-  cancelled:   { bg: "#FEE2E2", color: "#991B1B" },
+  pending:     { bg: "#FEF3C7", color: "#92400E" },     // ממתין - כתום
+  in_progress: { bg: "#EDE9FE", color: "#5B21B6" },     // בביצוע - סגול
+  done:        { bg: "#D1FAE5", color: "#065F46" },     // הושלם - ירוק
+  cancelled:   { bg: "#FEE2E2", color: "#991B1B" },     // בוטל - אדום
 };
+/* ─── צבעי עדיפות לתלונות ─── */
 const COMP_PRI = {
-  high:   { bg: "#FEE2E2", color: "#991B1B" },
-  medium: { bg: "#FEF3C7", color: "#92400E" },
-  low:    { bg: "#D1FAE5", color: "#065F46" },
+  high:   { bg: "#FEE2E2", color: "#991B1B" },          // גבוהה - אדום
+  medium: { bg: "#FEF3C7", color: "#92400E" },          // בינונית - כתום
+  low:    { bg: "#D1FAE5", color: "#065F46" },          // נמוכה - ירוק
 };
 
-/* ════════════════════════════════════
-   Component
-════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   הקומפוננטה הראשית - דשבורד אדמין
+   ═══════════════════════════════════════════════ */
 export default function AdminDashboard() {
-  const navigate         = useNavigate();
-  const { isHe, L, dir } = useL();
+  const navigate         = useNavigate();               // כלי ניווט
+  const { isHe, L, dir } = useL();                      // שפה, פונקציית L, כיוון
 
-  const [mounted,  setMounted ] = useState(false);
-  const [section,  setSection ] = useState("overview");
-  const [pros,     setPros    ] = useState(PENDING_PROS);
-  const [comps,    setComps   ] = useState(COMPLAINTS);
-  const [users,    setUsers   ] = useState(USERS);
-  const [modal,    setModal   ] = useState(null);
-  const [search,   setSearch  ] = useState("");
-  const [filter,   setFilter  ] = useState("all");
-  const [toast,    setToast   ] = useState(null);
-  const toastRef = useRef(null);
+  /* ─── משתני מצב ─── */
+  const [mounted,  setMounted ] = useState(false);      // האם הקומפוננטה נטענה? (אנימציה)
+  const [stats, setStats] = useState(null);             // סטטיסטיקות מהשרת
 
+  /* ─── טעינת נתונים מהשרת (רץ פעם אחת) ─── */
+  useEffect(() => {
+    const token = localStorage.getItem('token');                  // מוציא טוקן מ-localStorage
+    const headers = { 'Authorization': 'Bearer ' + token };       // headers משותפים
+
+    // בקשה 1: שליפת סטטיסטיקות דשבורד
+    fetch('http://localhost:8080/api/admin/dashboard', { headers })
+      .then(res => res.json())
+      .then(data => setStats(data))
+      .catch(err => console.log('Stats error:', err));
+
+    // בקשה 2: שליפת בעלי מקצוע שממתינים לאישור
+    fetch('http://localhost:8080/api/admin/pros/pending', { headers })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          // ממיר את הנתונים מהשרת לפורמט שהדף מצפה לו
+          const mapped = data.map(p => ({
+            id: p.id,
+            name: p.user?.fullName || "Professional",
+            nameHe: p.user?.fullName || "בעל מקצוע",
+            trade: p.specialty || "General",
+            tradeHe: p.specialty || "כללי",
+            city: p.location || "",
+            cityHe: p.location || "",
+            phone: p.user?.phone || "",
+            email: p.user?.email || "",
+            exp: `${p.yearsExperience || 0} years`,
+            expHe: `${p.yearsExperience || 0} שנים`,
+            joined: p.user?.createdAt || "",
+            docs: 0,
+            avatar: (p.user?.fullName || "P").charAt(0)    // אות ראשונה לאווטאר
+          }));
+          setPros(mapped);
+        }
+      })
+      .catch(err => console.log('Pros error:', err));
+  }, []);
+
+  /* ─── משתני מצב נוספים ─── */
+  const [section,  setSection ] = useState("overview");                // איזה חלק מוצג (overview/approvals/complaints/users/orders)
+  const [pros, setPros] = useState([]);                                 // רשימת בעלי מקצוע ממתינים
+  const [comps,    setComps   ] = useState(COMPLAINTS);                 // רשימת תלונות
+  const [users,    setUsers   ] = useState(USERS);                       // רשימת משתמשים
+  const [modal,    setModal   ] = useState(null);                        // איזה מודל פתוח
+  const [search,   setSearch  ] = useState("");                           // טקסט חיפוש
+  const [filter,   setFilter  ] = useState("all");                        // פילטר פעיל
+  const [toast,    setToast   ] = useState(null);                          // הודעה צפה
+  const toastRef = useRef(null);                                            // הפניה לטיימר של toast
+
+  /* ─── אנימציית כניסה ─── */
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 40);
     return () => clearTimeout(t);
   }, []);
 
+  /* ─── פונקציית toast - מציגה הודעה צפה ומעלימה אחרי 2.8 שניות ─── */
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
     clearTimeout(toastRef.current);
     toastRef.current = setTimeout(() => setToast(null), 2800);
   };
 
-  /* actions */
-  const approvePro  = (id) => { setPros(p => p.filter(x => x.id !== id)); showToast(L("Pro approved ✓", "בעל מקצוע אושר ✓")); setModal(null); };
+  /* ═══════════════════════════════════════════════
+     פעולות אדמין
+     ═══════════════════════════════════════════════ */
+
+  /* ─── אישור בעל מקצוע (שולח לשרת PUT) ─── */
+  const approvePro = async (id) => {
+    const token = localStorage.getItem('token');
+    try {
+      await fetch(`http://localhost:8080/api/admin/pros/${id}/approve`, {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+    } catch (err) {
+      console.log('Approve error:', err);
+    }
+    setPros(p => p.filter(x => x.id !== id));                                // מסיר מהרשימה
+    showToast(L("Pro approved ✓", "בעל מקצוע אושר ✓"));
+    setModal(null);
+  };
+  /* ─── דחיית בעל מקצוע ─── */
   const rejectPro   = (id) => { setPros(p => p.filter(x => x.id !== id)); showToast(L("Pro rejected", "בעל מקצוע נדחה"), "warning"); setModal(null); };
+  /* ─── פתרון תלונה (סימון כ"טופל") ─── */
   const resolveComp = (id) => { setComps(p => p.map(x => x.id === id ? { ...x, status: "resolved" } : x)); showToast(L("Complaint resolved ✓", "תלונה טופלה ✓")); setModal(null); };
+  /* ─── השעיית/שחרור משתמש ─── */
   const toggleUser  = (id) => { setUsers(p => p.map(x => x.id === id ? { ...x, status: x.status === "suspended" ? "active" : "suspended" } : x)); showToast(L("User updated", "משתמש עודכן"), "info"); setModal(null); };
 
-  /* nav */
+  /* ─── רשימת הפריטים בסרגל הצד (כל פריט = חלק באפליקציה) ─── */
   const NAV = [
-    { id: "overview",   label: L("Overview",   "סקירה"),       Icon: IcoGrid,  badge: null },
-    { id: "approvals",  label: L("Approvals",  "אישורים"),     Icon: IcoShield,badge: pros.length || null },
-    { id: "complaints", label: L("Complaints", "תלונות"),      Icon: IcoAlert, badge: comps.filter(c => c.status === "open").length || null },
-    { id: "users",      label: L("Users",      "משתמשים"),     Icon: IcoUsers, badge: null },
-    { id: "orders",     label: L("Orders",     "הזמנות"),      Icon: IcoClip,  badge: null },
+    { id: "overview",   label: L("Overview",   "סקירה"),       Icon: IcoGrid,  badge: null },                                             // סקירה כללית
+    { id: "approvals",  label: L("Approvals",  "אישורים"),     Icon: IcoShield,badge: pros.length || null },                               // אישורי מקצוענים + מונה
+    { id: "complaints", label: L("Complaints", "תלונות"),      Icon: IcoAlert, badge: comps.filter(c => c.status === "open").length || null },   // תלונות פתוחות + מונה
+    { id: "users",      label: L("Users",      "משתמשים"),     Icon: IcoUsers, badge: null },                                              // ניהול משתמשים
+    { id: "orders",     label: L("Orders",     "הזמנות"),      Icon: IcoClip,  badge: null },                                              // הזמנות
   ];
 
-  /* back button */
+  /* ─── כפתור חזרה לסקירה הכללית (משמש בתוך חלקים) ─── */
   const BackBtn = () => (
     <button
       onClick={() => setSection("overview")}
@@ -201,10 +287,10 @@ export default function AdminDashboard() {
         }
       `}</style>
 
-      {/* ══ SIDEBAR ══ */}
+      {/* ═══ סרגל צד (Sidebar) - תפריט ניווט שחור ═══ */}
       <aside className="sidebar" style={{ width: 240, background: "linear-gradient(180deg,#0F172A 0%,#1E293B 100%)", minHeight: "100vh", display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", flexShrink: 0, zIndex: 50 }}>
 
-        {/* Logo */}
+        {/* ─── לוגו בראש הסרגל ─── */}
         <div style={{ padding: "22px 20px 18px", borderBottom: "1px solid rgba(255,255,255,.07)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2563EB,#1D4ED8)", display: "flex", alignItems: "center", justifyContent: "center", color: "#FFF", flexShrink: 0 }}>
@@ -217,7 +303,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Nav */}
+        {/* ─── תפריט הניווט - 5 פריטים ─── */}
         <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 4 }}>
           {NAV.map(item => (
             <div key={item.id} className="nav-item"
@@ -235,7 +321,7 @@ export default function AdminDashboard() {
           ))}
         </nav>
 
-        {/* Admin info + logout */}
+        {/* ─── פרטי אדמין + כפתור יציאה (בתחתית) ─── */}
         <div style={{ padding: "14px 12px", borderTop: "1px solid rgba(255,255,255,.07)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,.05)", marginBottom: 8 }}>
             <div style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg,#7C3AED,#5B21B6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#FFF", fontSize: 13, fontWeight: 800, flexShrink: 0 }}>A</div>
@@ -251,10 +337,10 @@ export default function AdminDashboard() {
         </div>
       </aside>
 
-      {/* ══ CONTENT ══ */}
+      {/* ═══ תוכן ראשי - משתנה לפי section ═══ */}
       <div style={{ flex: 1, overflowY: "auto", padding: "28px 28px 60px", minWidth: 0 }}>
 
-        {/* ─── OVERVIEW ─── */}
+        {/* ═══════════════ חלק 1: סקירה כללית (Overview) ═══════════════ */}
         {section === "overview" && (
           <div style={{ animation: "fadeUp .35s" }}>
             <SectionHeader
@@ -267,7 +353,7 @@ export default function AdminDashboard() {
               }
             />
 
-            {/* KPI cards */}
+            {/* ─── 6 כרטיסי KPI - סטטיסטיקות עיקריות ─── */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 14, marginBottom: 26 }}>
               {[
                 { Icon: IcoUsers,  n: STATS.totalUsers,    label: L("Total Users",        "משתמשים"),          sub: L("+24 this week", "+24 השבוע"),  color: "#2563EB", bg: "#EFF6FF" },
@@ -286,10 +372,10 @@ export default function AdminDashboard() {
               ))}
             </div>
 
-            {/* Two columns */}
+            {/* ─── 2 טורים: הזמנות אחרונות + פיד פעילות ─── */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
 
-              {/* Recent Orders */}
+              {/* ═══ טור שמאל: הזמנות אחרונות (4 אחרונות) ═══ */}
               <div style={{ background: "#FFF", borderRadius: 18, border: "1px solid #E8ECF4", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,.04)" }}>
                 <div style={{ padding: "18px 22px", borderBottom: "1px solid #F1F5F9", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <h3 style={{ fontFamily: "'Outfit'", fontSize: 16, fontWeight: 700, color: "#1A2B4A" }}>{L("Recent Orders", "הזמנות אחרונות")}</h3>
@@ -316,7 +402,7 @@ export default function AdminDashboard() {
                 })}
               </div>
 
-              {/* Activity Feed */}
+              {/* ═══ טור ימין: פיד פעילות חי ═══ */}
               <div style={{ background: "#FFF", borderRadius: 18, border: "1px solid #E8ECF4", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,.04)" }}>
                 <div style={{ padding: "18px 22px", borderBottom: "1px solid #F1F5F9" }}>
                   <h3 style={{ fontFamily: "'Outfit'", fontSize: 16, fontWeight: 700, color: "#1A2B4A" }}>{L("Live Activity", "פעילות אחרונה")}</h3>
@@ -337,7 +423,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* ─── APPROVALS ─── */}
+        {/* ═══════════════ חלק 2: אישורי בעלי מקצוע ═══════════════ */}
         {section === "approvals" && (
           <div style={{ animation: "fadeUp .35s" }}>
             <SectionHeader
@@ -395,7 +481,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* ─── COMPLAINTS ─── */}
+        {/* ═══════════════ חלק 3: תלונות ═══════════════ */}
         {section === "complaints" && (
           <div style={{ animation: "fadeUp .35s" }}>
             <SectionHeader
@@ -452,7 +538,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* ─── USERS ─── */}
+        {/* ═══════════════ חלק 4: ניהול משתמשים ═══════════════ */}
         {section === "users" && (
           <div style={{ animation: "fadeUp .35s" }}>
             <SectionHeader
@@ -508,7 +594,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* ─── ORDERS ─── */}
+        {/* ═══════════════ חלק 5: כל ההזמנות ═══════════════ */}
         {section === "orders" && (
           <div style={{ animation: "fadeUp .35s" }}>
             <SectionHeader
@@ -542,8 +628,11 @@ export default function AdminDashboard() {
 
       </div>
 
-      {/* ════ MODALS ════ */}
+      {/* ═══════════════════════════════════════════════
+          מודלים - חלונות קופצים
+          ═══════════════════════════════════════════════ */}
 
+      {/* ─── מודל 1: אישור בעל מקצוע ─── */}
       {modal?.type === "approve_pro" && (
         <Overlay onClose={() => setModal(null)}>
           <div style={{ textAlign: "center", direction: dir }}>
@@ -559,6 +648,7 @@ export default function AdminDashboard() {
         </Overlay>
       )}
 
+      {/* ─── מודל 2: צפייה בפרטי בעל מקצוע (לפני אישור/דחייה) ─── */}
       {modal?.type === "view_pro" && (
         <Overlay onClose={() => setModal(null)} wide>
           <div style={{ direction: dir }}>
@@ -593,6 +683,7 @@ export default function AdminDashboard() {
         </Overlay>
       )}
 
+      {/* ─── מודל 3: צפייה בפרטי תלונה ─── */}
       {modal?.type === "view_complaint" && (
         <Overlay onClose={() => setModal(null)} wide>
           <div style={{ direction: dir }}>
@@ -628,6 +719,7 @@ export default function AdminDashboard() {
         </Overlay>
       )}
 
+      {/* ─── מודל 4: צפייה בפרטי משתמש ─── */}
       {modal?.type === "view_user" && (
         <Overlay onClose={() => setModal(null)} wide>
           <div style={{ direction: dir }}>
@@ -667,7 +759,7 @@ export default function AdminDashboard() {
         </Overlay>
       )}
 
-      {/* Toast */}
+      {/* ─── Toast - הודעה צפה בתחתית המסך ─── */}
       {toast && (
         <div style={{ position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)", zIndex: 600, animation: "toastIn .25s", pointerEvents: "none" }}>
           <div style={{ padding: "12px 24px", borderRadius: 22, background: toast.type === "warning" ? "#FEF3C7" : toast.type === "info" ? "#EFF6FF" : "#0F172A", color: toast.type === "warning" ? "#92400E" : toast.type === "info" ? "#1D4ED8" : "#FFF", fontSize: 14, fontWeight: 600, boxShadow: "0 8px 30px rgba(0,0,0,.18)", whiteSpace: "nowrap", fontFamily: "inherit" }}>
@@ -679,7 +771,11 @@ export default function AdminDashboard() {
   );
 }
 
-/* ─── Sub-components ─── */
+/* ═══════════════════════════════════════════════
+   קומפוננטות משנה קטנות לשימוש חוזר
+   ═══════════════════════════════════════════════ */
+
+// ─── כותרת סקשן - כותרת גדולה + תת-כותרת + כפתור פעולה אופציונלי ───
 function SectionHeader({ title, sub, action }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22, flexWrap: "wrap", gap: 12 }}>
@@ -692,6 +788,7 @@ function SectionHeader({ title, sub, action }) {
   );
 }
 
+// ─── מסך ריק - כשאין נתונים (אימוג'י + כותרת + טקסט) ───
 function EmptyState({ emoji, title, sub }) {
   return (
     <div style={{ background: "#FFF", borderRadius: 18, border: "1.5px dashed #D1D9E8", padding: "60px 24px", textAlign: "center" }}>
@@ -702,6 +799,7 @@ function EmptyState({ emoji, title, sub }) {
   );
 }
 
+// ─── Overlay - רקע שחור שקוף של מודל + קופסה לבנה בפנים ───
 function Overlay({ children, onClose, wide }) {
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", backdropFilter: "blur(5px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 400, padding: 20 }}>
@@ -712,6 +810,7 @@ function Overlay({ children, onClose, wide }) {
   );
 }
 
+// ─── MBtn = Modal Button - כפתור למודלים (ברירת מחדל לבן, bg = צבעוני) ───
 function MBtn({ label, onClick, bg, glow }) {
   return (
     <button onClick={onClick}

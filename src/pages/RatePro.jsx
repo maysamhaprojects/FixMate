@@ -1,57 +1,69 @@
-import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { useLang, translate, getLang, getDir } from "../context/LanguageContext";
+/* ═══════════════════════════════════════════════
+   FixMate - דף דירוג מקצוען (RatePro)
+   הלקוח נותן דירוג (1-5 כוכבים) ותגובה עם עזרת AI
+   ═══════════════════════════════════════════════ */
+import { useState } from "react";                                     // זיכרון
+import { useNavigate, useSearchParams } from "react-router-dom";       // ניווט + קריאת פרמטרי URL
+import { useLang, translate, getLang, getDir } from "../context/LanguageContext";  // כלים לשפה
 
 export default function RatePro() {
-  var navigate = useNavigate();
-  var sp = useSearchParams()[0];
-  var proName = sp.get("pro") || "Your Professional";
-  var service = sp.get("service") || "Service";
+  var navigate = useNavigate();                                       // כלי ניווט
+  var sp = useSearchParams()[0];                                       // קריאת פרמטרים מה-URL
+  var proName = sp.get("pro") || "Your Professional";                  // שם המקצוען (מה-URL)
+  var service = sp.get("service") || "Service";                        // סוג השירות (מה-URL)
   var lang = getLang();
   var dir = getDir();
   var isHe = lang === "he";
 
-  var _r = useState(0); var rating = _r[0]; var setRating = _r[1];
-  var _h = useState(0); var hovering = _h[0]; var setHovering = _h[1];
-  var _s = useState(false); var submitted = _s[0]; var setSubmitted = _s[1];
-  var _c = useState(""); var comment = _c[0]; var setComment = _c[1];
-  var _ai = useState(false); var aiLoading = _ai[0]; var setAiLoading = _ai[1];
-  var _sug = useState(""); var aiSuggestion = _sug[0]; var setAiSuggestion = _sug[1];
-  var _show = useState(false); var showSuggestion = _show[0]; var setShowSuggestion = _show[1];
-  var _dl = useState(false); var detectedHe = _dl[0]; var setDetectedHe = _dl[1];
+  /* ─── משתני מצב של הטופס ─── */
+  var _r = useState(0); var rating = _r[0]; var setRating = _r[1];                              // הדירוג שנבחר (0-5)
+  var _h = useState(0); var hovering = _h[0]; var setHovering = _h[1];                          // על איזה כוכב העכבר
+  var _s = useState(false); var submitted = _s[0]; var setSubmitted = _s[1];                    // האם נשלח?
+  var _c = useState(""); var comment = _c[0]; var setComment = _c[1];                           // הטקסט של התגובה
+  var _ai = useState(false); var aiLoading = _ai[0]; var setAiLoading = _ai[1];                 // האם AI עובד?
+  var _sug = useState(""); var aiSuggestion = _sug[0]; var setAiSuggestion = _sug[1];           // ההצעה של ה-AI
+  var _show = useState(false); var showSuggestion = _show[0]; var setShowSuggestion = _show[1]; // האם להציג את ההצעה?
+  var _dl = useState(false); var detectedHe = _dl[0]; var setDetectedHe = _dl[1];               // האם זוהתה עברית בטקסט?
 
+  /* ─── תוויות לכל רמת דירוג (1-5) ─── */
   var labels = isHe
-    ? ["", "\u05d2\u05e8\u05d5\u05e2", "\u05e1\u05d1\u05d9\u05e8", "\u05d8\u05d5\u05d1", "\u05d8\u05d5\u05d1 \u05de\u05d0\u05d5\u05d3", "\u05de\u05e2\u05d5\u05dc\u05d4"]
+    ? ["", "\u05d2\u05e8\u05d5\u05e2", "\u05e1\u05d1\u05d9\u05e8", "\u05d8\u05d5\u05d1", "\u05d8\u05d5\u05d1 \u05de\u05d0\u05d5\u05d3", "\u05de\u05e2\u05d5\u05dc\u05d4"]   // גרוע/סביר/טוב/טוב מאוד/מעולה
     : ["", "Poor", "Fair", "Good", "Very Good", "Excellent"];
-  var emojis = ["", "\ud83d\ude1e", "\ud83d\ude10", "\ud83d\ude42", "\ud83d\ude0a", "\ud83e\udd29"];
-  var colors = ["", "#EF4444", "#F97316", "#F59E0B", "#10B981", "#2563EB"];
+  var emojis = ["", "\ud83d\ude1e", "\ud83d\ude10", "\ud83d\ude42", "\ud83d\ude0a", "\ud83e\udd29"];   // אימוג'ים לכל דירוג
+  var colors = ["", "#EF4444", "#F97316", "#F59E0B", "#10B981", "#2563EB"];                           // צבעים לכל דירוג
 
+  /* ─── פונקציית שליחת הדירוג ─── */
   var handleSubmit = function() {
-    if (rating === 0) return;
-    setSubmitted(true);
-    setTimeout(function() { navigate("/client/dashboard"); }, 2500);
+    if (rating === 0) return;                                           // אם לא בחר דירוג - לא עושים כלום
+    setSubmitted(true);                                                  // מציג מסך "תודה"
+    setTimeout(function() { navigate("/client/dashboard"); }, 2500);     // אחרי 2.5 שניות - חוזר לדשבורד
   };
 
+  /* ═══════════════════════════════════════════════
+     פונקציית שיפור טקסט ע"י AI
+     - מזהה אוטומטית את השפה של הטקסט (עברית/אנגלית)
+     - מציע ניסוח משופר ומקצועי יותר
+     ═══════════════════════════════════════════════ */
   var handleAiImprove = function() {
-    if (!comment.trim() || comment.trim().length < 3) return;
-    setAiLoading(true);
-    setShowSuggestion(false);
+    if (!comment.trim() || comment.trim().length < 3) return;   // לפחות 3 תווים
+    setAiLoading(true);                                          // מדליק טעינה
+    setShowSuggestion(false);                                    // מסתיר הצעה קודמת
 
-    /* ── Smart local AI improvement ── */
-    setTimeout(function() {
+    /* ── AI חכם מקומי לשיפור טקסט ── */
+    setTimeout(function() {          // מדמה עיכוב של שרת (1.2 שניות)
       var text = comment.trim();
       var improved = "";
 
-      /* ── Detect actual language of written text ── */
-      var hebrewChars = (text.match(/[\u0590-\u05FF]/g) || []).length;
-      var latinChars = (text.match(/[a-zA-Z]/g) || []).length;
-      var textIsHebrew = hebrewChars > latinChars;
+      /* ── זיהוי שפת הטקסט הכתוב (עברית / אנגלית) ── */
+      var hebrewChars = (text.match(/[\u0590-\u05FF]/g) || []).length;   // ספירת אותיות עבריות
+      var latinChars = (text.match(/[a-zA-Z]/g) || []).length;           // ספירת אותיות לטיניות
+      var textIsHebrew = hebrewChars > latinChars;                       // יותר עברית = טקסט עברי
       setDetectedHe(textIsHebrew);
 
       if (textIsHebrew) {
-        /* ── Hebrew improvements ── */
+        /* ── שיפורים בעברית ── */
         if (text.length < 15) {
-          /* Too short — suggest elaboration */
+          /* טקסט קצר מדי - מציע ניסוח מורחב */
           var shortExpand = {
             "\u05DE\u05E2\u05D5\u05DC\u05D4": "\u05E9\u05D9\u05E8\u05D5\u05EA \u05DE\u05E2\u05D5\u05DC\u05D4! \u05D1\u05E2\u05DC \u05D4\u05DE\u05E7\u05E6\u05D5\u05E2 \u05D4\u05D9\u05D4 \u05DE\u05E7\u05E6\u05D5\u05E2\u05D9, \u05D4\u05D2\u05D9\u05E2 \u05D1\u05D6\u05DE\u05DF \u05D5\u05E2\u05E9\u05D4 \u05E2\u05D1\u05D5\u05D3\u05D4 \u05DE\u05E6\u05D5\u05D9\u05E0\u05EA. \u05DE\u05DE\u05DC\u05D9\u05E5 \u05D1\u05D4\u05D7\u05DC\u05D8!",
             "\u05DE\u05D3\u05D4\u05D9\u05DD": "\u05D7\u05D5\u05D5\u05D9\u05D4 \u05DE\u05D3\u05D4\u05D9\u05DE\u05D4! \u05D1\u05E2\u05DC \u05D4\u05DE\u05E7\u05E6\u05D5\u05E2 \u05D4\u05E4\u05D2\u05D9\u05DF \u05DE\u05E7\u05E6\u05D5\u05E2\u05D9\u05D5\u05EA \u05D5\u05EA\u05E9\u05D5\u05DE\u05EA \u05DC\u05D1 \u05DC\u05E4\u05E8\u05D8\u05D9\u05DD. \u05D4\u05E2\u05D1\u05D5\u05D3\u05D4 \u05D1\u05D5\u05E6\u05E2\u05D4 \u05D1\u05E8\u05DE\u05D4 \u05D2\u05D1\u05D5\u05D4\u05D4 \u05D5\u05D0\u05E0\u05D9 \u05DE\u05DE\u05DC\u05D9\u05E5 \u05D1\u05D7\u05D5\u05DD!",
@@ -68,22 +80,23 @@ export default function RatePro() {
             improved = "\u05D4\u05E9\u05D9\u05E8\u05D5\u05EA \u05D4\u05D9\u05D4 " + text + ". \u05D4\u05E2\u05D1\u05D5\u05D3\u05D4 \u05D1\u05D5\u05E6\u05E2\u05D4 \u05D1\u05D0\u05D5\u05E4\u05DF \u05DE\u05E7\u05E6\u05D5\u05E2\u05D9 \u05D5\u05D0\u05E0\u05D9 \u05DE\u05DE\u05DC\u05D9\u05E5 \u05D1\u05D4\u05D7\u05DC\u05D8.";
           }
         } else {
-          /* Longer text — polish it */
+          /* טקסט ארוך - ליטוש הניסוח */
           improved = text;
-          /* Capitalize opening */
+          /* הוספת פתיחה מקצועית */
           if (!improved.startsWith("\u05D4") && !improved.startsWith("\u05D0\u05E0\u05D9") && !improved.startsWith("\u05D4\u05E9")) {
             improved = "\u05D4\u05E9\u05D9\u05E8\u05D5\u05EA \u05D4\u05D9\u05D4 \u05DE\u05E7\u05E6\u05D5\u05E2\u05D9 \u05DE\u05D0\u05D5\u05D3. " + improved;
           }
-          /* Add polite ending if missing */
+          /* הוספת סיום נעים אם חסר */
           if (!improved.includes("\u05DE\u05DE\u05DC\u05D9\u05E5") && !improved.includes("\u05EA\u05D5\u05D3\u05D4") && !improved.includes("!")) {
             improved = improved.replace(/[.!?\s]+$/, "") + ". \u05DE\u05DE\u05DC\u05D9\u05E5 \u05D1\u05D4\u05D7\u05DC\u05D8!";
           }
-          /* Clean up punctuation */
+          /* ניקוי סימני פיסוק כפולים */
           improved = improved.replace(/\?\?+/g, "?").replace(/!!+/g, "!").replace(/\.\./g, ".");
         }
       } else {
-        /* ── English improvements ── */
+        /* ── שיפורים באנגלית ── */
         if (text.length < 15) {
+          /* טקסט קצר באנגלית - הצעת ניסוח מורחב */
           var enExpand = {
             "great": "Great service! The professional was skilled, arrived on time, and completed the job efficiently. Highly recommended.",
             "good": "Good experience overall. The work was done professionally and the results met my expectations.",
@@ -106,32 +119,35 @@ export default function RatePro() {
             improved = "The service was " + text.toLowerCase() + ". The professional handled the job competently and I would consider using their services again.";
           }
         } else {
+          /* טקסט ארוך באנגלית - ליטוש */
           improved = text;
-          /* Capitalize first letter */
+          /* הפוך אות ראשונה לגדולה */
           improved = improved.charAt(0).toUpperCase() + improved.slice(1);
-          /* Add professional tone */
+          /* הוספת טון מקצועי */
           if (!improved.includes("professional") && !improved.includes("service") && !improved.includes("recommend")) {
             improved = improved.replace(/[.!?\s]+$/, "") + ". Overall a professional experience.";
           }
-          /* Clean punctuation */
+          /* ניקוי סימני פיסוק */
           improved = improved.replace(/\?\?+/g, "?").replace(/!!+/g, "!").replace(/\.\./g, ".");
-          /* Ensure ends with period */
+          /* ודא שמסתיים בנקודה */
           if (!/[.!?]$/.test(improved)) improved += ".";
         }
       }
 
-      setAiSuggestion(improved);
-      setShowSuggestion(true);
-      setAiLoading(false);
-    }, 1200);
+      setAiSuggestion(improved);       // שומר את ההצעה החדשה
+      setShowSuggestion(true);          // מציג את הפאנל
+      setAiLoading(false);              // מכבה טעינה
+    }, 1200);                           // עיכוב של 1.2 שניות (סימולציה)
   };
 
+  /* ─── לחיצה על "אשר הצעה" - משתמש בה כתגובה ─── */
   var handleAcceptAi = function() {
-    setComment(aiSuggestion);
-    setShowSuggestion(false);
+    setComment(aiSuggestion);      // מעתיק את ההצעה לשדה התגובה
+    setShowSuggestion(false);       // מסתיר את הפאנל
     setAiSuggestion("");
   };
 
+  /* ─── לחיצה על "דחה הצעה" - שומר על הטקסט המקורי ─── */
   var handleRejectAi = function() {
     setShowSuggestion(false);
     setAiSuggestion("");
@@ -141,8 +157,10 @@ export default function RatePro() {
     <div dir={dir} style={{ fontFamily: "'DM Sans','Inter',sans-serif", background: "linear-gradient(135deg,#F0F4FF 0%,#F8FAFF 50%,#FFF 100%)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <style>{"\n        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Heebo:wght@400;500;600;700;800;900&display=swap');\n        @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}\n        @keyframes popIn{0%{transform:scale(0)}50%{transform:scale(1.2)}100%{transform:scale(1)}}\n        .starBtn:hover svg{transform:scale(1.2)}\n        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}\n        *{box-sizing:border-box;margin:0}\n      "}</style>
 
+      {/* ═══ מסך תודה (מוצג אחרי שליחה) ═══ */}
       {submitted && (
         <div style={{ textAlign: "center", animation: "fadeUp .4s", maxWidth: 420, width: "100%" }}>
+          {/* עיגול ירוק עם וי - אישור */}
           <div style={{ width: 88, height: 88, borderRadius: "50%", background: "linear-gradient(135deg,#059669,#10B981)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", animation: "popIn .5s" }}>
             <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
           </div>
@@ -158,8 +176,10 @@ export default function RatePro() {
         </div>
       )}
 
+      {/* ═══ מסך הדירוג הראשי (לפני שליחה) ═══ */}
       {!submitted && (
         <div style={{ background: "#FFF", borderRadius: 28, padding: "44px 32px 36px", maxWidth: 440, width: "100%", textAlign: "center", boxShadow: "0 8px 40px rgba(0,0,0,.06)", border: "1px solid #E8ECF4", animation: "fadeUp .4s" }}>
+          {/* אווטאר המקצוען (2 אותיות ראשונות מהשם) */}
           <div style={{ width: 72, height: 72, borderRadius: 20, background: "linear-gradient(135deg,#3B82F6,#2563EB)", color: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 22, margin: "0 auto 16px", boxShadow: "0 6px 24px rgba(37,99,235,.25)" }}>
             {proName.split(" ").map(function(w) { return w[0]; }).join("").slice(0, 2)}
           </div>
@@ -171,10 +191,11 @@ export default function RatePro() {
           </p>
           <p style={{ fontSize: 13, color: "#94A3B8", marginBottom: 28 }}>{service}</p>
 
+          {/* ─── 5 כוכבי הדירוג ─── */}
           <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 16 }}>
             {[1, 2, 3, 4, 5].map(function(star) {
-              var active = star <= (hovering || rating);
-              var activeColor = colors[hovering || rating] || "#E2E8F0";
+              var active = star <= (hovering || rating);                // האם הכוכב הזה פעיל?
+              var activeColor = colors[hovering || rating] || "#E2E8F0"; // הצבע של הכוכבים הפעילים
               return (
                 <button key={star} className="starBtn" onClick={function() { setRating(star); }} onMouseEnter={function() { setHovering(star); }} onMouseLeave={function() { setHovering(0); }}
                   style={{ background: "none", border: "none", cursor: "pointer", padding: 4, transition: "transform .15s", transform: active ? "scale(1.1)" : "scale(1)" }}>
@@ -186,6 +207,7 @@ export default function RatePro() {
             })}
           </div>
 
+          {/* ─── אימוג'י + תווית הדירוג (גרוע/טוב/מעולה וכו') ─── */}
           <div style={{ height: 40, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
             {(hovering || rating) > 0 && (
               <div style={{ animation: "fadeUp .2s", display: "flex", alignItems: "center", gap: 8 }}>
@@ -195,7 +217,7 @@ export default function RatePro() {
             )}
           </div>
 
-          {/* ── Comment Box ── */}
+          {/* ═══ תיבת תגובה (מופיע רק אחרי בחירת דירוג) ═══ */}
           {rating > 0 && (
             <div style={{ marginBottom: 24, animation: "fadeUp .3s", textAlign: isHe ? "right" : "left" }}>
               <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 8 }}>
@@ -229,7 +251,7 @@ export default function RatePro() {
                 <span style={{ fontSize: 11, color: comment.length > 450 ? "#EF4444" : "#94A3B8" }}>{comment.length}/500</span>
               </div>
 
-              {/* ── AI Improve Button ── */}
+              {/* ─── כפתור "שפר עם AI" (מוצג רק אם יש לפחות 3 תווים) ─── */}
               {comment.trim().length >= 3 && !showSuggestion && (
                 <button onClick={handleAiImprove} disabled={aiLoading}
                   style={{
@@ -254,7 +276,7 @@ export default function RatePro() {
                 </button>
               )}
 
-              {/* ── AI Suggestion Panel ── */}
+              {/* ─── פאנל ההצעה של AI (עם כפתורי אשר/דחה) ─── */}
               {showSuggestion && (
                 <div style={{ marginTop: 14, padding: "16px", borderRadius: 16, border: "2px solid #C7D2FE", background: "linear-gradient(135deg,#EEF2FF,#FFF)", animation: "fadeUp .3s" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
@@ -285,11 +307,13 @@ export default function RatePro() {
             </div>
           )}
 
+          {/* ─── כפתור שליחת הדירוג (מנוטרל עד בחירת דירוג) ─── */}
           <button onClick={handleSubmit} disabled={rating === 0}
             style={{ width: "100%", padding: "16px", borderRadius: 14, border: "none", background: rating > 0 ? "linear-gradient(135deg,#2563EB,#1D4ED8)" : "#E2E8F0", color: rating > 0 ? "#FFF" : "#94A3B8", fontSize: 17, fontWeight: 700, fontFamily: "'Outfit'", cursor: rating > 0 ? "pointer" : "not-allowed", boxShadow: rating > 0 ? "0 8px 30px rgba(37,99,235,.3)" : "none", transition: "all .3s", marginBottom: 12 }}>
             {isHe ? (comment.trim() ? "\u2B50 \u05E9\u05DC\u05D7\u05D5 \u05D3\u05D9\u05E8\u05D5\u05D2 \u05D5\u05DE\u05E9\u05D5\u05D1" : "\u2b50 \u05e9\u05dc\u05d7\u05d5 \u05d3\u05d9\u05e8\u05d5\u05d2") : (comment.trim() ? "\u2b50 Submit Rating & Review" : "\u2b50 Submit Rating")}
           </button>
 
+          {/* ─── קישור "דלג לעת עתה" (חוזר לדשבורד בלי דירוג) ─── */}
           <button onClick={function() { navigate("/client/dashboard"); }}
             style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "#94A3B8", fontWeight: 500, padding: 8 }}>
             {isHe ? "\u05d3\u05dc\u05d2\u05d5 \u05dc\u05e2\u05ea \u05e2\u05ea\u05d4" : "Skip for now"}

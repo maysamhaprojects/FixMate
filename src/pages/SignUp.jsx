@@ -32,10 +32,13 @@
  * =============================================
  */
 
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import "../styles/auth.css";
-import { useLang } from "../context/LanguageContext";
+/* ═══════════════════════════════════════════════
+   ייבוא הכלים שצריך מ-React וממקומות אחרים
+   ═══════════════════════════════════════════════ */
+import { useState, useEffect } from "react";           // useState = זיכרון של הקומפוננטה | useEffect = מפעיל קוד בזמנים מסוימים
+import { useNavigate } from "react-router-dom";         // הוק שמאפשר לעבור בין דפים באתר
+import "../styles/auth.css";                             // קובץ העיצוב (צבעים, גדלים, אנימציות)
+import { useLang } from "../context/LanguageContext";    // הוק לתמיכה בשתי שפות (עברית/אנגלית)
 
 /* ─────────────────────────────────────────────
    SVG Icon Components
@@ -170,68 +173,70 @@ const SERVICE_CATEGORIES = [
 
 
 /* =============================================
- *  MAIN COMPONENT: SignUp
+ *  הקומפוננטה הראשית - דף ההרשמה
+ *  מנוהלת ב-4 שלבים:
+ *  שלב 1 - בחירת תפקיד | שלב 2 - פרטים אישיים | שלב 3 - פרטי מקצוען | שלב 4 - הצלחה
  * ============================================= */
 export default function SignUp() {
-  /* ─── Navigation hook for page transitions ─── */
-  const navigate = useNavigate();
-  const { lang, dir } = useLang();
-  const isHe = lang === "he";
-  const [step, setStep] = useState(1);
+  /* ─── הוקים בסיסיים ─── */
+  const navigate = useNavigate();              // כלי לניווט בין דפים
+  const { lang, dir } = useLang();             // lang = השפה ("he"/"en"), dir = הכיוון ("rtl"/"ltr")
+  const isHe = lang === "he";                   // האם השפה עברית? (true/false)
+  const [step, setStep] = useState(1);          // באיזה שלב אנחנו עכשיו (מתחיל ב-1)
 
-  /* ─── Form Data ─── */
-  const [role, setRole] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [avatar, setAvatar] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  /* ─── משתני הטופס (כל שדה = useState נפרד) ─── */
+  const [role, setRole] = useState("");                      // תפקיד: "client" או "professional"
+  const [fullName, setFullName] = useState("");              // שם מלא
+  const [email, setEmail] = useState("");                    // אימייל
+  const [password, setPassword] = useState("");              // סיסמה
+  const [confirmPassword, setConfirmPassword] = useState(""); // אימות סיסמה
+  const [phone, setPhone] = useState("");                    // מספר טלפון
+  const [address, setAddress] = useState("");                // כתובת/עיר
+  const [avatar, setAvatar] = useState(null);                // קובץ תמונת הפרופיל (אובייקט File)
+  const [avatarPreview, setAvatarPreview] = useState(null);  // תצוגה מקדימה של התמונה (Data URL)
+  const [showPassword, setShowPassword] = useState(false);   // האם להציג את הסיסמה? (אייקון עין)
+  const [showConfirm, setShowConfirm] = useState(false);     // האם להציג את אימות הסיסמה?
 
-  /* ─── Professional-Only Fields ─── */
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [serviceRadius, setServiceRadius] = useState("10");
-  const [priceMin, setPriceMin] = useState("");
-  const [priceMax, setPriceMax] = useState("");
-  const [bio, setBio] = useState("");
+  /* ─── שדות שרלוונטיים רק לבעלי מקצוע (שלב 3) ─── */
+  const [selectedCategories, setSelectedCategories] = useState([]); // רשימת קטגוריות נבחרות
+  const [serviceRadius, setServiceRadius] = useState("10");         // רדיוס שירות בק"מ (סליידר)
+  const [priceMin, setPriceMin] = useState("");                     // מחיר מינימום
+  const [priceMax, setPriceMax] = useState("");                     // מחיר מקסימום
+  const [bio, setBio] = useState("");                               // תיאור עצמי (ביוגרפיה)
 
-  /* ─── UI State ─── */
+  /* ─── UI State ─── אלה משתנים שלא שומרים את המידע הראשי של המשתמש כמו שם, אימייל, סיסמה, אלא שומרים איך המסך מתנהג ונראה.*/
   const [isLoading, setIsLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [shakeError, setShakeError] = useState(false);
-  const [focusedField, setFocusedField] = useState(null);
+  const [mounted, setMounted] = useState(false);    /* ─── קשור של אנימטציה של מסך─── */
+  const [errors, setErrors] = useState({});  
+  const [shakeError, setShakeError] = useState(false);/* ─── שולט על אנימציית רעד כשיש שגיאה */
+  const [focusedField, setFocusedField] = useState(null);  /* ─── השדה שהמשתמש עומד עליו עכשיו וכותב בו.*/
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-  /* Trigger entrance animation on mount */
+  /* Trigger entrance animation on mount-רץ פעם אחת כשהקומפוננטה נטענת */
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 50);
     return () => clearTimeout(timer);
   }, []);
 
-  /* Scroll to top when step changes */
+  /* Scroll to top when step changes-כשעוברים משלב לשלב, הדף חוזר אוטומטית להתחלה של העמוד בצורה חלקה. */
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [step]);
 
   /**
-   * toggleCategory — Add/remove a category from selection
+   * toggleCategory — Add/remove a category from selection- בודקים את הקטגוריה אם קיימת מוחקים אם לא מוספים
    */
   const toggleCategory = (categoryId) => {
     setSelectedCategories((prev) =>
       prev.includes(categoryId)
-        ? prev.filter((c) => c !== categoryId)
-        : [...prev, categoryId]
+        ? prev.filter((c) => c !== categoryId) /* משאירים רק את מה שלא שווה ל־categoryId */
+        : [...prev, categoryId] /* אם לא קיימת הקטגוריה אז מוסיפים אותה */
     );
     if (errors.categories) setErrors((prev) => ({ ...prev, categories: null }));
   };
 
   /**
-   * handleAvatarChange — Handle profile image upload
+   * handleAvatarChange — Handle profile image upload-פונקציה שמופעלת כשבוחרים תמונה
    */
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -243,12 +248,12 @@ export default function SignUp() {
       setAvatar(file);
       const reader = new FileReader();
       reader.onloadend = () => setAvatarPreview(reader.result);
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(file); /* מתחילים לקרוא את הקובץ ולהפוך אותו לתמונה להצגה */
       if (errors.avatar) setErrors((prev) => ({ ...prev, avatar: null }));
     }
   };
 
-  const removeAvatar = () => {
+  const removeAvatar = () => {  /* מאפס התמונה שנבחרה */  
     setAvatar(null);
     setAvatarPreview(null);
   };
@@ -280,13 +285,13 @@ export default function SignUp() {
   };
 
   /**
-   * validateStep3 — Validate professional-only fields
+   * validateStep3 — Validate professional-only fields-“Unicode הוא ייצוג של טקסט באמצעות קודים מספריים כדי לאפשר תמיכה בכל השפות ולמנוע בעיות קידוד.”
    */
   const validateStep3 = () => {
     const newErrors = {};
     if (selectedCategories.length === 0) newErrors.categories = isHe ? "בחרו לפחות קטגוריה אחת" : "Select at least one service category";
-    if (!priceMin || !priceMax) newErrors.price = isHe ? "\u05d0\u05e0\u05d0 \u05d4\u05d2\u05d3\u05d9\u05e8\u05d5 \u05d8\u05d5\u05d5\u05d7 \u05de\u05d7\u05d9\u05e8\u05d9\u05dd" : "Please set your price range";
-    if (!bio.trim()) newErrors.bio = isHe ? "\u05d0\u05e0\u05d0 \u05db\u05ea\u05d1\u05d5 \u05e7\u05e6\u05ea \u05e2\u05dc \u05e2\u05e6\u05de\u05db\u05dd" : "Please write a short bio";
+    if (!priceMin || !priceMax) newErrors.price = isHe ? "\u05d0\u05e0\u05d0 \u05d4\u05d2\u05d3\u05d9\u05e8\u05d5 \u05d8\u05d5\u05d5\u05d7 \u05de\u05d7\u05d9\u05e8\u05d9\u05dd" : "Please set your price range";   
+    if (!bio.trim()) newErrors.bio = isHe ? "\u05d0\u05e0\u05d0 \u05db\u05ea\u05d1\u05d5 \u05e7\u05e6\u05ea \u05e2\u05dc \u05e2\u05e6\u05de\u05db\u05dd" : "Please write a short bio"; 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -342,33 +347,40 @@ export default function SignUp() {
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
-      // ──────────────────────────────────────────
-      // TODO: Replace with actual API call:
-      //
-      // const body = { fullName, email, password, phone, address, role };
-      // if (role === 'professional') {
-      //   body.categories = selectedCategories;
-      //   body.serviceRadius = parseInt(serviceRadius);
-      //   body.priceMin = parseInt(priceMin);
-      //   body.priceMax = parseInt(priceMax);
-      //   body.bio = bio;
-      // }
-      // const response = await fetch('/api/auth/register', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(body),
-      // });
-      // const data = await response.json();
-      // if (!response.ok) throw new Error(data.message);
-      //
-      // 🚩 [PAYMENT-FLAG] Future: professionals → subscription page
-      // ──────────────────────────────────────────
+      const body = {
+        fullName,
+        email,
+        password,
+        phone,
+        address,
+        role: role.toUpperCase()
+      };
 
-      // MOCK: Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1800));
+      if (role === 'professional') {
+        body.bio = bio;
+      }
+
+      const response = await fetch('http://localhost:8080/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+
+      // שמירת ה-Token אחרי הרשמה מוצלחת
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('role', data.role);
+      localStorage.setItem('fullName', data.fullName);
+
       setStep(4);
+
     } catch (error) {
-      setErrors({ general: isHe ? "ההרשמה נכשלה. נסו שוב." : "Registration failed. Please try again." });
+      setErrors({ general: isHe ? "ההרשמה נכשלה. נסו שוב." : error.message || "Registration failed." });
       setShakeError(true);
       setTimeout(() => setShakeError(false), 600);
     } finally {
@@ -377,19 +389,19 @@ export default function SignUp() {
   };
 
   /**
-   * getInputClass — Returns CSS classes for input container
+   * getInputClass — Returns CSS classes for input container-
    */
   const getInputClass = (fieldName) => {
     let cls = "auth-input-container";
     if (errors[fieldName]) cls += " auth-input-container--error";
-    if (focusedField === fieldName) cls += " auth-input-container--focused";
+    if (focusedField === fieldName) cls += " auth-input-container--focused";  /* שם השדה שהמשתמש עומד עליו */
     return cls;
   };
 
-  const totalSteps = role === "professional" ? 3 : 2;
+  const totalSteps = role === "professional" ? 3 : 2;         /*     מחשב כמה שלבים יש בטופס */
 
   return (
-    <div className="auth-page" dir={dir}>
+    <div className="auth-page" dir={dir}> /*כאן מתחיל החלק שמחזיר את ה־HTML של הקומפוננטה.─*/
 
       {/* ── Decorative Gradient Header ── */}
       <div className="auth-gradient-header" />
@@ -397,7 +409,7 @@ export default function SignUp() {
       <div className="auth-float-circle auth-float-circle--2" />
       <div className="auth-float-circle auth-float-circle--3" />
 
-      {/* ── Back Button ── */}
+      {/* ── Back Button ──זה כפתור החזרה העליון. */}
       <button
         className="auth-back-btn"
         onClick={() => {
@@ -406,14 +418,15 @@ export default function SignUp() {
           else handleBack();                       // → Previous step
         }}
       >
-        <IconArrowLeft />
+        <IconArrowLeft /> /* ציור של חץ שמאלה */
         {step === 1 ? (isHe ? "\u05d1\u05d9\u05ea" : "Home") : step === 4 ? (isHe ? "\u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea" : "Login") : (isHe ? "\u05d7\u05d6\u05e8\u05d4" : "Back")}
       </button>
 
       {/* ═══════════════════════════════════════════
           MAIN CARD WRAPPER
           ═══════════════════════════════════════════ */}
-      <div className={`auth-card-wrapper ${mounted ? "auth-card-wrapper--visible" : ""}`}>
+      <div className={`auth-card-wrapper ${mounted ? "auth-card-wrapper--visible" : ""}`}> {/* mounted → גורם לכרטיס להופיע באנימציה
+                                                                                           shakeError → גורם לכרטיס לרעוד אם יש שגיאה ── */}
         <div className={`auth-card ${shakeError ? "auth-card--shake" : ""}`}>
 
           {/* ── Logo ── */}
@@ -429,7 +442,7 @@ export default function SignUp() {
             )}
           </div>
 
-          {/* ── Progress Bar ── */}
+          {/* ── Progress Bar ── באיזה שלב את נמצאת מתוך כמה שלבים*/}
           {step < 4 && (
             <div className="signup-progress">
               <div className="signup-progress-bar">
@@ -495,7 +508,7 @@ export default function SignUp() {
                 <div className="auth-avatar-circle" onClick={() => document.getElementById("avatar-input").click()}>
                   {avatarPreview ? (
                     <img src={avatarPreview} alt="Profile" className="auth-avatar-img" />
-                  ) : (
+                  ) : (   
                     <div className="auth-avatar-placeholder">
                       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
@@ -708,9 +721,9 @@ export default function SignUp() {
           {/* ═══════════════════════════════════════════
               NAVIGATION BUTTONS (Steps 1-3)
               ═══════════════════════════════════════════ */}
-          {step < 4 && (
+          {step < 4 && (       /*  כפתור חזרה  */
             <div className="signup-nav-buttons">
-              {step > 1 && (
+              {step > 1 && (      
                 <button className="signup-back-btn" onClick={handleBack}>
                   <IconArrowLeft /> {isHe ? "\u05d7\u05d6\u05e8\u05d4" : "Back"}
                 </button>

@@ -1,7 +1,12 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { translate, getLang, getDir } from "../context/LanguageContext";
+/* ═══════════════════════════════════════════════
+   FixMate - מפות חשיבה (MindMap)
+   מדריכים ויזואליים לפתרון בעיות ביתיות - DIY
+   ═══════════════════════════════════════════════ */
+import { useState } from "react";                              // useState = זיכרון קומפוננטה
+import { useNavigate } from "react-router-dom";                 // הוק לניווט
+import { translate, getLang, getDir } from "../context/LanguageContext";   // כלים לשפה
 
+/* ─── אייקון חץ חזרה ─── */
 const IconBack = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="19" y1="12" x2="5" y2="12" />
@@ -9,6 +14,11 @@ const IconBack = () => (
   </svg>
 );
 
+/* ═══════════════════════════════════════════════
+   4 מפות חשיבה באנגלית
+   כל מפה: id, icon, title, צבע מרכז, וענפים (branches)
+   כל ענף: תווית, צבע, רקע, ושלבי פתרון (children)
+   ═══════════════════════════════════════════════ */
 const MAPS_EN = [
   {
     id: "boiler", icon: "\u{1F4A7}", title: "Hot Water Troubleshooting",
@@ -78,6 +88,9 @@ const MAPS_EN = [
   },
 ];
 
+/* ═══════════════════════════════════════════════
+   אותן 4 מפות - גרסה עברית
+   ═══════════════════════════════════════════════ */
 const MAPS_HE = [
   {
     id: "boiler", icon: "\u{1F4A7}", title: "\u05EA\u05E7\u05DC\u05D5\u05EA \u05DE\u05D9\u05DD \u05D7\u05DE\u05D9\u05DD",
@@ -147,21 +160,25 @@ const MAPS_HE = [
   },
 ];
 
+/* ─── פונקציה שמחזירה את המפות בשפה הנכונה ─── */
 function getMaps() {
-  var curLang = "en"; try { curLang = localStorage.getItem("fixmate_lang") || "en"; } catch(e) {}
-  return curLang === "he" ? MAPS_HE : MAPS_EN;
+  var curLang = "en"; try { curLang = localStorage.getItem("fixmate_lang") || "en"; } catch(e) {}   // קורא שפה מ-localStorage
+  return curLang === "he" ? MAPS_HE : MAPS_EN;                                                       // מחזיר את הגרסה המתאימה
 }
 
-/* ============= MIND MAP VISUAL ============= */
+/* ═══════════════════════════════════════════════
+   קומפוננטת התצוגה הוויזואלית של מפת חשיבה
+   מציגה צומת מרכזי + ענפים מסביב במעגל
+   ═══════════════════════════════════════════════ */
 function MindMapView({ map }) {
-  const [openBranch, setOpenBranch] = useState(null);
+  const [openBranch, setOpenBranch] = useState(null);   // איזה ענף פתוח כרגע (null = אף אחד)
   const lang = getLang();
   const isHe = lang === "he";
-  const cx = 400, cy = 300, R = 200;
+  const cx = 400, cy = 300, R = 200;                     // מרכז x,y ורדיוס המעגל
 
   return (
     <div style={{ position: "relative", width: "100%", maxWidth: 860, margin: "0 auto", minHeight: 620, padding: "30px 10px" }}>
-      {/* Center node */}
+      {/* ─── צומת מרכזי (העיגול הגדול במרכז) ─── */}
       <div style={{
         position: "absolute", left: "50%", top: 240, transform: "translate(-50%,-50%)",
         width: 120, height: 120, borderRadius: "50%",
@@ -174,19 +191,21 @@ function MindMapView({ map }) {
         <span style={{ fontSize: 11, fontWeight: 700, color: map.centerColor, textAlign: "center", lineHeight: 1.2, padding: "0 8px", marginTop: 4 }}>{map.title}</span>
       </div>
 
-      {/* Branches */}
+      {/* ─── ענפים (מעגלים צבעוניים מסביב למרכז) ─── */}
       {map.branches.map((branch, i) => {
-        const angle = (i / map.branches.length) * Math.PI * 2 - Math.PI / 2;
-        const bx = cx + R * Math.cos(angle);
-        const by = cy + R * Math.sin(angle);
-        const isOpen = openBranch === i;
+        const angle = (i / map.branches.length) * Math.PI * 2 - Math.PI / 2;   // חישוב זווית לכל ענף
+        const bx = cx + R * Math.cos(angle);                                    // מיקום X של הענף
+        const by = cy + R * Math.sin(angle);                                    // מיקום Y של הענף
+        const isOpen = openBranch === i;                                        // האם הענף הזה פתוח?
 
         return (
           <div key={i}>
+            {/* קו מקווקו שמחבר את המרכז לענף */}
             <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 600, pointerEvents: "none", zIndex: 1 }}>
               <line x1="50%" y1={240} x2={`${(bx / 800) * 100}%`} y2={by} stroke={branch.color} strokeWidth="2" strokeDasharray="6,4" opacity={0.4} />
             </svg>
 
+            {/* כפתור הענף (לוחצים עליו כדי לפתוח/לסגור את שלבי הפתרון) */}
             <div
               onClick={() => setOpenBranch(isOpen ? null : i)}
               style={{
@@ -208,6 +227,7 @@ function MindMapView({ map }) {
               {branch.label}
             </div>
 
+            {/* פאנל שלבי הפתרון - מוצג רק אם הענף פתוח */}
             {isOpen && (
               <div style={{
                 position: "absolute",
@@ -219,6 +239,7 @@ function MindMapView({ map }) {
                 boxShadow: `0 12px 40px ${branch.color}25`,
                 animation: "fadeUp .3s",
               }}>
+                {/* רשימת שלבים / טיפים */}
                 {branch.children.map((child, ci) => (
                   <div key={ci} style={{
                     fontSize: 13, color: "#1A2B4A", lineHeight: 1.6,
@@ -237,14 +258,16 @@ function MindMapView({ map }) {
   );
 }
 
-/* ============= MAIN ============= */
+/* ═══════════════════════════════════════════════
+   הקומפוננטה הראשית - דף ה-MindMap
+   ═══════════════════════════════════════════════ */
 export default function MindMap() {
-  const navigate = useNavigate();
-  var lang = getLang(); var dir = getDir();
-  const isHe = lang === "he";
-  const [selectedMap, setSelectedMap] = useState(null);
-  var MAPS = getMaps();
-  const map = MAPS.find((m) => m.id === selectedMap);
+  const navigate = useNavigate();                              // כלי ניווט
+  var lang = getLang(); var dir = getDir();                    // שפה וכיוון
+  const isHe = lang === "he";                                   // האם עברית?
+  const [selectedMap, setSelectedMap] = useState(null);         // איזו מפה נבחרה (null = מסך רשימה)
+  var MAPS = getMaps();                                         // כל המפות (בשפה הנכונה)
+  const map = MAPS.find((m) => m.id === selectedMap);           // המפה הנבחרת (אובייקט)
 
   return (
     <div style={{ fontFamily: "'DM Sans','Inter',sans-serif", background: "linear-gradient(135deg,#F0F4FF 0%,#F8FAFF 50%,#FFF 100%)", minHeight: "100vh", direction: dir }}>
@@ -255,7 +278,7 @@ export default function MindMap() {
         *{box-sizing:border-box;margin:0}
       `}</style>
 
-      {/* NAV */}
+      {/* ═══ תפריט ניווט עליון (דבוק למעלה) ═══ */}
       <nav style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(255,255,255,.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid #E8ECF4", boxShadow: "0 1px 12px rgba(0,0,0,.04)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 24px" }}>
           <div style={{ textAlign: "center", flex: 1 }}>
@@ -273,17 +296,20 @@ export default function MindMap() {
         </div>
       </nav>
 
-      {/* MAP VIEW */}
+      {/* ═══ אם נבחרה מפה - מציג אותה, אחרת - מציג רשימת המפות ═══ */}
       {selectedMap && map ? (
         <MindMapView map={map} />
       ) : (
+        /* ─── מסך רשימת המפות (כאשר לא נבחרה מפה) ─── */
         <div style={{ maxWidth: 900, margin: "0 auto", padding: "40px 24px" }}>
+          {/* כותרת ותת-כותרת */}
           <div style={{ textAlign: "center", marginBottom: 36 }}>
             <span style={{ fontSize: 56 }}>{"\uD83D\uDDFA\uFE0F"}</span>
             <h1 style={{ fontFamily: isHe ? "'Heebo','Outfit'" : "'Outfit'", fontSize: 28, fontWeight: 800, color: "#1A2B4A", marginBottom: 6 }}>{isHe ? "\u05DE\u05D3\u05E8\u05D9\u05DB\u05D9 \u05DE\u05E4\u05EA \u05D7\u05E9\u05D9\u05D1\u05D4" : "Mind Map Guides"}</h1>
             <p style={{ fontSize: 15, color: "#7C8DB5" }}>{isHe ? "\u05E4\u05EA\u05E8\u05D5\u05DF \u05EA\u05E7\u05DC\u05D5\u05EA \u05D5\u05D9\u05D6\u05D5\u05D0\u05DC\u05D9 \u2014 \u05DC\u05D7\u05E6\u05D5 \u05E2\u05DC \u05E2\u05E0\u05E3 \u05DC\u05E8\u05D0\u05D5\u05EA \u05E9\u05DC\u05D1\u05D9\u05DD" : "Visual troubleshooting \u2014 tap branches to see step-by-step fixes"}</p>
           </div>
 
+          {/* ─── רשת של כרטיסי מפות (4 כרטיסים: דוד, מזגן, חשמל, אינסטלציה) ─── */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 20 }}>
             {MAPS.map((m) => (
               <div key={m.id} className="mmCard" onClick={() => setSelectedMap(m.id)}

@@ -1,37 +1,49 @@
-import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useLang, LangToggle } from "../context/LanguageContext";
+/* ═══════════════════════════════════════════════
+   FixMate - דף הזמנת מקצוען (BookaPro)
+   תהליך הזמנה ב-3 שלבים: בעיה → תאריך → בחירת מקצוען
+   ═══════════════════════════════════════════════ */
+import { useState, useRef, useEffect } from "react";          // הוקים של React
+import { useNavigate } from "react-router-dom";                // הוק לניווט בין דפים
+import { useLang, LangToggle } from "../context/LanguageContext";  // תמיכה בשפות
 
-const IconBack = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>;
-const IconForward = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>;
-const IconCheck = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>;
-const IconStar = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="#FBBF24" stroke="#FBBF24" strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>;
-const IconLocation = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>;
-const IconClock = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>;
-const IconX = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>;
-const IconSearch = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>;
-const IconPin = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>;
-const IconCalendar = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>;
-const IconClockLg = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>;
-const IconCamera = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>;
-const IconSend = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>;
+/* ─── אייקוני SVG ─── */
+const IconBack = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>;       // חץ חזרה
+const IconForward = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>;    // חץ קדימה
+const IconCheck = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>;                                                  // וי - אישור
+const IconStar = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="#FBBF24" stroke="#FBBF24" strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>;                  // כוכב - דירוג
+const IconLocation = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>;  // סיכת מיקום
+const IconClock = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>;                // שעון
+const IconX = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>;              // X - סגירה
+const IconSearch = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>;        // זכוכית מגדלת - חיפוש
+const IconPin = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>;     // סיכה - מיקום
+const IconCalendar = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>;  // לוח שנה
+const IconClockLg = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>;                // שעון גדול
+const IconCamera = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>;  // מצלמה
+const IconSend = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>;       // שליחה
 
+/* ─── אייקוני אימוג'י לכל קטגוריה ─── */
 const catIcons = { electricity:"⚡", plumbing:"🔧", painting:"🎨", ac:"❄️", locksmith:"🔑", renovation:"🏗️", carpentry:"🪚", cleaning:"🧹" };
 
+/* ─── רשימת מזהי הקטגוריות ─── */
 const CAT_IDS = ["electricity","plumbing","painting","ac","locksmith","renovation","carpentry","cleaning"];
+/* ─── מפתחות תרגום לשמות הקטגוריות ─── */
 const CAT_LABEL_KEYS = { electricity:"bp_cat_electricity", plumbing:"bp_cat_plumbing", painting:"bp_cat_painting", ac:"bp_cat_ac", locksmith:"bp_cat_locksmith", renovation:"bp_cat_renovation", carpentry:"bp_cat_carpentry", cleaning:"bp_cat_cleaning" };
 
+/* ─── סוגי תקלות לכל קטגוריה ─── */
 const ISSUE_IDS = {
-  electricity: ["short_circuit","panel_replace","sockets","lighting","install_points","general_elec"],
-  plumbing: ["clog","leak","faucet","boiler","pipes","general_plumb"],
-  painting: ["full_apt","single_room","plaster","exterior"],
-  ac: ["ac_fault","ac_clean","ac_install","ac_gas"],
-  locksmith: ["door_open","lock_replace","lock_install","keys"],
-  renovation: ["gypsum","tiling","cladding","demolition"],
-  carpentry: ["furniture","closet","door_fix","custom"],
-  cleaning: ["deep_clean","post_reno","windows","carpet"],
+  electricity: ["short_circuit","panel_replace","sockets","lighting","install_points","general_elec"],   // חשמל: קצר, החלפת לוח, שקעים, תאורה, נקודות, כללי
+  plumbing: ["clog","leak","faucet","boiler","pipes","general_plumb"],                                    // אינסטלציה: סתימה, נזילה, ברז, דוד, צנרת, כללי
+  painting: ["full_apt","single_room","plaster","exterior"],                                              // צביעה: דירה שלמה, חדר בודד, טיח, חיצוני
+  ac: ["ac_fault","ac_clean","ac_install","ac_gas"],                                                      // מזגנים: תקלה, ניקוי, התקנה, גז
+  locksmith: ["door_open","lock_replace","lock_install","keys"],                                          // מנעולן: פתיחת דלת, החלפה, התקנה, מפתחות
+  renovation: ["gypsum","tiling","cladding","demolition"],                                                // שיפוצים: גבס, ריצוף, חיפוי, הריסה
+  carpentry: ["furniture","closet","door_fix","custom"],                                                  // נגרות: רהיטים, ארון, תיקון דלת, מותאם
+  cleaning: ["deep_clean","post_reno","windows","carpet"],                                                // ניקיון: עמוק, לאחר שיפוץ, חלונות, שטיח
 };
 
+/* ═══════════════════════════════════════════════
+   מפת אבחונים - כל אבחון מכיל: קטגוריה, סוג תקלה, מילות מפתח, וטקסט בשתי שפות
+   ═══════════════════════════════════════════════ */
 const DIAGNOSIS_MAP = [
   { cat: "plumbing", issue: "leak", keywords: ["water","leak","pipe","drip","wet","puddle","flood","damp","moisture"],
     en: { title: "Water Leak Detected", desc: "I can see signs of a water leak. This appears to be a plumbing issue — specifically a pipe or faucet leak. I recommend booking a plumber to inspect and fix this before it causes further damage." },
@@ -59,109 +71,127 @@ const DIAGNOSIS_MAP = [
     he: { title: "תקלה ברהיט / נגרות זוהתה", desc: "זה נראה כתקלה בנגרות או רהיט. בין אם זה ארון שבור, מדף, או דלת — נגר מקצועי יכול לתקן או לבנות." } },
 ];
 
+/* ─── אבחון ברירת מחדל - אם AI לא זיהה כלום ─── */
 const DEFAULT_DIAG = { cat: "plumbing", issue: "general_plumb",
   en: { title: "Issue Identified", desc: "Based on my analysis, this appears to be a home maintenance issue. I recommend booking a professional to inspect and provide a proper assessment." },
   he: { title: "תקלה זוהתה", desc: "על סמך הניתוח שלי, זו נראית תקלה בתחזוקת הבית. מומלץ להזמין בעל מקצוע לבדיקה והערכה." } };
 
+/* ─── פונקציה שמחזירה אבחון רנדומלי (לבדיקה - כשאין טקסט) ─── */
 function getDiagnosis() {
   const rnd = Math.random();
-  if (rnd < 0.25) return DIAGNOSIS_MAP[0];
-  if (rnd < 0.40) return DIAGNOSIS_MAP[2];
-  if (rnd < 0.55) return DIAGNOSIS_MAP[3];
-  if (rnd < 0.65) return DIAGNOSIS_MAP[1];
-  if (rnd < 0.75) return DIAGNOSIS_MAP[4];
-  if (rnd < 0.85) return DIAGNOSIS_MAP[5];
-  if (rnd < 0.92) return DIAGNOSIS_MAP[6];
-  return DIAGNOSIS_MAP[7];
+  if (rnd < 0.25) return DIAGNOSIS_MAP[0];   // 25% - נזילה
+  if (rnd < 0.40) return DIAGNOSIS_MAP[2];   // 15% - חשמל
+  if (rnd < 0.55) return DIAGNOSIS_MAP[3];   // 15% - מזגן
+  if (rnd < 0.65) return DIAGNOSIS_MAP[1];   // 10% - סתימה
+  if (rnd < 0.75) return DIAGNOSIS_MAP[4];   // 10% - צביעה
+  if (rnd < 0.85) return DIAGNOSIS_MAP[5];   // 10% - מנעולן
+  if (rnd < 0.92) return DIAGNOSIS_MAP[6];   // 7%  - שיפוצים
+  return DIAGNOSIS_MAP[7];                    // 8%  - נגרות
 }
 
+/* ─── פונקציה שמנתחת טקסט ומחזירה אבחון מתאים ─── */
 function getDiagnosisFromText(text) {
-  const lower = text.toLowerCase();
-  for (const d of DIAGNOSIS_MAP) {
-    if (d.keywords.some(k => lower.includes(k))) return d;
+  const lower = text.toLowerCase();                            // הופך הכל לאותיות קטנות
+  for (const d of DIAGNOSIS_MAP) {                              // עובר על כל אבחון
+    if (d.keywords.some(k => lower.includes(k))) return d;      // אם נמצאה מילת מפתח - מחזיר אותו
   }
+  /* ─── מילות מפתח בעברית - אם לא נמצאה באנגלית ─── */
   const heMap = [
-    { idx: 0, words: ["נזילה","מים","דליפה","רטיבות","צנרת","ברז"] },
-    { idx: 1, words: ["סתימה","סתום","ניקוז","אסלה","שירותים"] },
-    { idx: 2, words: ["חשמל","שקע","קצר","חוט","מתג","נתיך"] },
-    { idx: 3, words: ["מזגן","קריר","חם","מפוחה","מקרר"] },
-    { idx: 4, words: ["צבע","קיר","סדק","קילוף","עובש","טיח"] },
-    { idx: 5, words: ["מנעול","דלת","מפתח","תקוע"] },
-    { idx: 6, words: ["רצפה","אריח","קרמיקה","שיפוץ"] },
-    { idx: 7, words: ["עץ","רהיט","ארון","מדף","מגירה"] },
+    { idx: 0, words: ["נזילה","מים","דליפה","רטיבות","צנרת","ברז"] },    // נזילה
+    { idx: 1, words: ["סתימה","סתום","ניקוז","אסלה","שירותים"] },          // סתימה
+    { idx: 2, words: ["חשמל","שקע","קצר","חוט","מתג","נתיך"] },            // חשמל
+    { idx: 3, words: ["מזגן","קריר","חם","מפוחה","מקרר"] },                // מזגן
+    { idx: 4, words: ["צבע","קיר","סדק","קילוף","עובש","טיח"] },           // צביעה
+    { idx: 5, words: ["מנעול","דלת","מפתח","תקוע"] },                      // מנעולן
+    { idx: 6, words: ["רצפה","אריח","קרמיקה","שיפוץ"] },                   // שיפוצים
+    { idx: 7, words: ["עץ","רהיט","ארון","מדף","מגירה"] },                 // נגרות
   ];
   for (const h of heMap) {
     if (h.words.some(w => lower.includes(w))) return DIAGNOSIS_MAP[h.idx];
   }
-  return null;
+  return null;                                                  // לא זוהה כלום
 }
 
+/* ─── רשימת כל הערים בישראל (לבחירת מיקום) ─── */
 const ALL_CITIES = ["Acre (Akko)","Afula","Arad","Ariel","Ashdod","Ashkelon","Bat Yam","Beer Sheva","Beit She'an","Beit Shemesh","Bnei Brak","Caesarea","Carmiel","Daliyat al-Karmel","Dimona","Eilat","El'ad","Even Yehuda","Gan Yavne","Gedera","Givatayim","Hadera","Haifa","Herzliya","Hod HaSharon","Holon","Jerusalem","Karmiel","Kfar Saba","Kiryat Ata","Kiryat Bialik","Kiryat Gat","Kiryat Motzkin","Kiryat Ono","Kiryat Shmona","Kiryat Yam","Lod","Ma'ale Adumim","Ma'alot-Tarshiha","Migdal HaEmek","Modi'in","Modi'in Illit","Nahariya","Nazareth","Nazareth Illit (Nof HaGalil)","Nesher","Ness Ziona","Netanya","Netivot","Ofakim","Or Akiva","Or Yehuda","Petah Tikva","Ra'anana","Rahat","Ramat Gan","Ramat HaSharon","Ramla","Rehovot","Rishon LeZion","Rosh HaAyin","Safed (Tzfat)","Sakhnin","Sderot","Shoham","Tamra","Tel Aviv","Tiberias","Tirat Carmel","Tira","Umm al-Fahm","Yavne","Yehud-Monosson","Yokneam","Zichron Ya'akov"];
 
+/* ─── אפשרויות שעה לבחירה (כל חצי שעה מ-08:00 עד 20:00) ─── */
 const TIME_OPTIONS = [
   { value:"08:00", label:"08:00 AM" },{ value:"08:30", label:"08:30 AM" },{ value:"09:00", label:"09:00 AM" },{ value:"09:30", label:"09:30 AM" },{ value:"10:00", label:"10:00 AM" },{ value:"10:30", label:"10:30 AM" },{ value:"11:00", label:"11:00 AM" },{ value:"11:30", label:"11:30 AM" },
   { value:"12:00", label:"12:00 PM" },{ value:"12:30", label:"12:30 PM" },{ value:"13:00", label:"1:00 PM" },{ value:"13:30", label:"1:30 PM" },{ value:"14:00", label:"2:00 PM" },{ value:"14:30", label:"2:30 PM" },{ value:"15:00", label:"3:00 PM" },{ value:"15:30", label:"3:30 PM" },
   { value:"16:00", label:"4:00 PM" },{ value:"16:30", label:"4:30 PM" },{ value:"17:00", label:"5:00 PM" },{ value:"17:30", label:"5:30 PM" },{ value:"18:00", label:"6:00 PM" },{ value:"18:30", label:"6:30 PM" },{ value:"19:00", label:"7:00 PM" },{ value:"19:30", label:"7:30 PM" },{ value:"20:00", label:"8:00 PM" },
 ];
 
-const fN = ["Yossi","Avi","Mohammad","Daniel","Shimon","Omar","Ron","Alex","Nir","Fadi","Amit","Boris","Tal","Sami","Yigal","Maria","Nadia","Eran","Kobi","Ran","Dov","Faris","Meir","Victor","Ilan"];
-const lN = ["Cohen","Levy","Hassan","Barak","Dahan","Said","Mizrachi","Petrov","Avraham","Nasser","Shalom","Kozlov","Regev","Halabi","Tzur","Ivanova","Kamal","Shapira","Azulay","Dror","Stern","Daher","Peretz","Rosen","Mor"];
-const fN_he = ["יוסי","אבי","מוחמד","דניאל","שמעון","עומר","רון","אלכס","ניר","פאדי","עמית","בוריס","טל","סמי","יגאל","מריה","נאדיה","ערן","קובי","רן","דב","פארס","מאיר","ויקטור","אילן"];
-const lN_he = ["כהן","לוי","חסן","ברק","דהן","סעיד","מזרחי","פטרוב","אברהם","נאסר","שלום","קוזלוב","רגב","חלבי","צור","איבנובה","כמאל","שפירא","אזולאי","דרור","שטרן","דאהר","פרץ","רוזן","מור"];
+/* ─── רשימות שמות לייצור מקצוענים פיקטיביים ─── */
+const fN = ["Yossi","Avi","Mohammad","Daniel","Shimon","Omar","Ron","Alex","Nir","Fadi","Amit","Boris","Tal","Sami","Yigal","Maria","Nadia","Eran","Kobi","Ran","Dov","Faris","Meir","Victor","Ilan"];  // שמות פרטיים באנגלית
+const lN = ["Cohen","Levy","Hassan","Barak","Dahan","Said","Mizrachi","Petrov","Avraham","Nasser","Shalom","Kozlov","Regev","Halabi","Tzur","Ivanova","Kamal","Shapira","Azulay","Dror","Stern","Daher","Peretz","Rosen","Mor"];  // שמות משפחה באנגלית
+const fN_he = ["יוסי","אבי","מוחמד","דניאל","שמעון","עומר","רון","אלכס","ניר","פאדי","עמית","בוריס","טל","סמי","יגאל","מריה","נאדיה","ערן","קובי","רן","דב","פארס","מאיר","ויקטור","אילן"];  // שמות פרטיים בעברית
+const lN_he = ["כהן","לוי","חסן","ברק","דהן","סעיד","מזרחי","פטרוב","אברהם","נאסר","שלום","קוזלוב","רגב","חלבי","צור","איבנובה","כמאל","שפירא","אזולאי","דרור","שטרן","דאהר","פרץ","רוזן","מור"];  // שמות משפחה בעברית
 
+/* ─── פונקציה שמייצרת מקצוענים פיקטיביים לפי עיר וקטגוריה ─── */
 function genPros(city, catId) {
-  var curLang = "en"; try { curLang = localStorage.getItem("fixmate_lang") || "en"; } catch(e) {}
-  var first = curLang === "he" ? fN_he : fN;
+  var curLang = "en"; try { curLang = localStorage.getItem("fixmate_lang") || "en"; } catch(e) {}   // קריאת השפה מ-localStorage
+  var first = curLang === "he" ? fN_he : fN;                // בחירת שמות בשפה הנכונה
   var last  = curLang === "he" ? lN_he : lN;
-  const s = (city + catId).split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-  return Array.from({ length: (s % 4) + 1 }, (_, i) => {
+  const s = (city + catId).split("").reduce((a, c) => a + c.charCodeAt(0), 0);   // יוצר "seed" מהעיר + קטגוריה
+  return Array.from({ length: (s % 4) + 1 }, (_, i) => {     // מייצר 1-4 מקצוענים
     const fi = (s + i * 7) % first.length, li = (s + i * 13) % last.length;
     return { id: s * 100 + i, name: first[fi] + " " + last[li], rating: (4.4 + (((s + i) % 6) * 0.1)).toFixed(1), reviews: 30 + ((s + i * 17) % 250), city, price: `${100 + ((s + i) % 15) * 20}-${200 + ((s + i) % 15) * 30}`, avatar: first[fi][0] + last[li][0], expYears: 3 + ((s + i) % 18), available: "confirmed" };
   });
 }
 
+/* ─── פונקציה ליצירת עיצוב שדה קלט - עם גבול כחול אם יש ערך ─── */
 const fld = (ok) => ({ width: "100%", padding: "13px 16px", borderRadius: 14, border: ok ? "2px solid #2563EB" : "2px solid #EEF1F8", background: "#F8FAFF", fontSize: 15, color: ok ? "#1A2B4A" : "#94A3B8", fontFamily: "'DM Sans',sans-serif", outline: "none", transition: "all 0.25s", appearance: "none", WebkitAppearance: "none", cursor: "pointer", boxSizing: "border-box" });
 
+/* ═══════════════════════════════════════════════
+   הקומפוננטה הראשית - דף הזמנת מקצוען
+   ═══════════════════════════════════════════════ */
 export default function BookaPro() {
-  const navigate = useNavigate();
-  const { t, dir, lang } = useLang();
-  const isRTL = dir === "rtl";
-  const isHe  = lang === "he";
+  const navigate = useNavigate();                // כלי לניווט בין דפים
+  const { t, dir, lang } = useLang();            // תרגום, כיוון טקסט, שפה
+  const isRTL = dir === "rtl";                   // האם כיוון ימין-שמאל?
+  const isHe  = lang === "he";                   // האם השפה עברית?
 
-  const [step, setStep] = useState(1);
-  const [cat,  setCat ] = useState(null);
-  const [issue,setIssue] = useState(null);
+  /* ─── משתני השלבים והבעיה ─── */
+  const [step, setStep] = useState(1);           // באיזה שלב אנחנו (1-3)
+  const [cat,  setCat ] = useState(null);        // הקטגוריה הנבחרת (חשמל/אינסטלציה...)
+  const [issue,setIssue] = useState(null);       // סוג התקלה (נזילה/סתימה...)
 
-  const [msgs,         setMsgs        ] = useState([]);
-  const [chatInput,    setChatInput   ] = useState("");
-  const [analyzing,    setAnalyzing   ] = useState(false);
-  const [diagnosis,    setDiagnosis   ] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const fileRef    = useRef(null);
-  const chatEndRef = useRef(null);
+  /* ─── משתני הצ'אט עם ה-AI ─── */
+  const [msgs,         setMsgs        ] = useState([]);     // רשימת ההודעות בצ'אט
+  const [chatInput,    setChatInput   ] = useState("");     // מה שהמשתמש מקליד
+  const [analyzing,    setAnalyzing   ] = useState(false);  // האם AI עובד?
+  const [diagnosis,    setDiagnosis   ] = useState(null);   // תוצאת האבחון
+  const [imagePreview, setImagePreview] = useState(null);   // תצוגה מקדימה של תמונה
+  const fileRef    = useRef(null);                           // הפנייה לקובץ (למצלמה)
+  const chatEndRef = useRef(null);                           // הפנייה לסוף הצ'אט (לגלילה)
 
-  const [cityQ,   setCityQ  ] = useState("");
-  const [city,    setCity   ] = useState(null);
-  const [dd,      setDd     ] = useState(false);
-  const [date,    setDate   ] = useState("");
-  const [time,    setTime   ] = useState("");
-  const [results, setResults] = useState(false);
-  const [modal,   setModal  ] = useState(null);
-  const [ok,      setOk     ] = useState(false);
-  const [desc,    setDesc   ] = useState("");
-  const iRef = useRef(null);
-  const dRef = useRef(null);
+  /* ─── משתני המיקום, תאריך והזמנה ─── */
+  const [cityQ,   setCityQ  ] = useState("");       // טקסט חיפוש עיר
+  const [city,    setCity   ] = useState(null);     // העיר שנבחרה
+  const [dd,      setDd     ] = useState(false);    // האם הדרופדאון פתוח?
+  const [date,    setDate   ] = useState("");       // תאריך ההזמנה
+  const [time,    setTime   ] = useState("");       // שעת ההזמנה
+  const [results, setResults] = useState(false);    // האם להציג תוצאות חיפוש?
+  const [modal,   setModal  ] = useState(null);     // המודל הפתוח (אם בכלל)
+  const [ok,      setOk     ] = useState(false);    // האם ההזמנה אושרה?
+  const [desc,    setDesc   ] = useState("");       // תיאור ההזמנה
+  const iRef = useRef(null);                         // הפנייה לשדה החיפוש
+  const dRef = useRef(null);                         // הפנייה לדרופדאון
 
-  const filtered = cityQ ? ALL_CITIES.filter(c => c.toLowerCase().includes(cityQ.toLowerCase())) : ALL_CITIES;
-  const ready = city && date && time;
-  const today = new Date().toISOString().split("T")[0];
+  /* ─── חישובים על המשתנים ─── */
+  const filtered = cityQ ? ALL_CITIES.filter(c => c.toLowerCase().includes(cityQ.toLowerCase())) : ALL_CITIES;   // סינון ערים לפי חיפוש
+  const ready = city && date && time;                                        // האם כל השדות מולאו?
+  const today = new Date().toISOString().split("T")[0];                      // תאריך היום (לminimum)
 
+  /* ─── גלילה אוטומטית לסוף הצ'אט כשיש הודעה חדשה ─── */
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, analyzing]);
 
+  /* ─── סגירת דרופדאון בלחיצה מחוץ לו ─── */
   useEffect(() => {
     const h = (e) => { if (dRef.current && !dRef.current.contains(e.target) && iRef.current && !iRef.current.contains(e.target)) setDd(false); };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
+    document.addEventListener("mousedown", h);                 // מאזין ללחיצת עכבר
+    return () => document.removeEventListener("mousedown", h); // ניקוי
   }, []);
 
   useEffect(() => {
@@ -171,59 +201,93 @@ export default function BookaPro() {
     setMsgs([{ role: "bot", text: greeting }]);
   }, [isHe]);
 
-  const catLabel  = cat   ? t(CAT_LABEL_KEYS[cat]) : "";
-  const issueLabel= issue ? t(`bp_iss_${issue}`)   : "";
-  const timeLabel = TIME_OPTIONS.find(ti => ti.value === time)?.label || "";
-  const pros = city && cat ? genPros(city, cat) : [];
+  /* ─── תוויות לתצוגה ─── */
+  const catLabel  = cat   ? t(CAT_LABEL_KEYS[cat]) : "";                              // תווית הקטגוריה בשפה הנכונה
+  const issueLabel= issue ? t(`bp_iss_${issue}`)   : "";                              // תווית סוג התקלה
+  const timeLabel = TIME_OPTIONS.find(ti => ti.value === time)?.label || "";          // תווית השעה הנבחרת
+
+  const [pros, setPros] = useState([]);   // רשימת המקצוענים מהשרת
+
+/* ─── שליפת מקצוענים מהשרת לפי קטגוריה ─── */
+useEffect(() => {
+  if (!cat) return;    // אם אין קטגוריה - לא טוענים
+
+  // שליפת בעלי מקצוע מהבקאנד לפי קטגוריה
+  fetch(`http://localhost:8080/api/pros/search?specialty=${cat}`)
+    .then(res => res.json())
+    .then(data => {
+  if (Array.isArray(data)) {              // אם התשובה היא מערך
+    const mapped = data.map(p => ({       // ממיר לפורמט של הדף
+      id: p.id,
+      name: p.user?.fullName || "Professional",
+      rating: p.averageRating || 0,
+      reviews: p.totalRatings || 0,
+      city: p.location || "",
+      price: p.hourlyRate ? `${p.hourlyRate}` : "N/A",
+      avatar: (p.user?.fullName || "P").charAt(0),        // אות ראשונה לאווטאר
+      expYears: p.yearsExperience || 0,
+      available: "confirmed"
+    }));
+    setPros(mapped);
+  }
+})
+    .catch(err => console.log('Error fetching pros:', err));    // טיפול בשגיאה
+}, [cat]);     // רץ כל פעם ש-cat משתנה
+
+  /* ─── פונקציה לפורמט תאריך יפה ─── */
   const fmtDate = (d) => d ? new Date(d + "T00:00:00").toLocaleDateString(isHe ? "he-IL" : "en-US", { weekday: "short", month: "short", day: "numeric" }) : "";
 
+  /* ─── פונקציית חזרה אחורה ─── */
   const goBack = () => {
-    if (step === 2 && results) setResults(false);
-    else if (step === 2) setStep(1);
-    else navigate("/client/dashboard");
+    if (step === 2 && results) setResults(false);      // אם יש תוצאות - חוזר לטופס
+    else if (step === 2) setStep(1);                    // משלב 2 → 1
+    else navigate("/client/dashboard");                 // משלב 1 → דשבורד
   };
 
+  /* ─── טיפול בהעלאת תמונה ─── */
   const handlePhoto = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      const url = ev.target.result;
-      setImagePreview(url);
-      setMsgs(prev => [...prev, { role: "user", image: url }]);
-      runAnalysis(null);
+      const url = ev.target.result;                                    // כתובת התמונה
+      setImagePreview(url);                                             // תצוגה מקדימה
+      setMsgs(prev => [...prev, { role: "user", image: url }]);         // הוספה לצ'אט
+      runAnalysis(null);                                                // ניתוח AI
     };
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(file);                                         // קריאת הקובץ
   };
 
+  /* ─── שליחת הודעת טקסט לצ'אט ─── */
   const handleTextSend = () => {
     const txt = chatInput.trim();
-    if (!txt) return;
-    setMsgs(prev => [...prev, { role: "user", text: txt }]);
-    setChatInput("");
-    const textDiag = getDiagnosisFromText(txt);
-    runAnalysis(textDiag, txt);
+    if (!txt) return;                                                    // אם ריק - לא עושים כלום
+    setMsgs(prev => [...prev, { role: "user", text: txt }]);             // הוספה לצ'אט
+    setChatInput("");                                                    // ניקוי השדה
+    const textDiag = getDiagnosisFromText(txt);                          // מחפש אבחון לפי הטקסט
+    runAnalysis(textDiag, txt);                                          // מריץ ניתוח
   };
 
-  /* ✅ תיקון: currentIsHe נשמר לפני setTimeout */
+  /* ─── פונקציית ניתוח AI - מחכה ומחזירה אבחון ─── */
   const runAnalysis = (textDiag, inputText) => {
-    setAnalyzing(true);
+    setAnalyzing(true);                                                  // מתחיל ניתוח
     // זיהוי שפה: לפי הטקסט שהוקלד, או לפי שפת האפליקציה
-    const textHasHebrew = inputText ? /[א-ת]/.test(inputText) : false;
+    const textHasHebrew = inputText ? /[א-ת]/.test(inputText) : false;   // האם יש עברית בטקסט?
     const currentIsHe = textHasHebrew || lang === "he";
-    const delay = 1500 + Math.random() * 1500;
+    const delay = 1500 + Math.random() * 1500;                           // עיכוב רנדומלי 1.5-3 שניות
     setTimeout(() => {
-      const diag = textDiag || getDiagnosis();
+      const diag = textDiag || getDiagnosis();                           // אבחון מטקסט או רנדומלי
       setDiagnosis(diag);
-      setCat(diag.cat);
-      setIssue(diag.issue);
-      const langData = currentIsHe ? diag.he : diag.en;
+      setCat(diag.cat);                                                   // שומר קטגוריה
+      setIssue(diag.issue);                                               // שומר סוג תקלה
+      const langData = currentIsHe ? diag.he : diag.en;                   // טקסט בשפה הנכונה
       const botMsg = `**${langData.title}** ${catIcons[diag.cat]}\n\n${langData.desc}`;
-      setMsgs(prev => [...prev, { role: "bot", text: botMsg }]);
-      setAnalyzing(false);
+      setMsgs(prev => [...prev, { role: "bot", text: botMsg }]);          // הודעת בוט
+      setAnalyzing(false);                                                // סיום ניתוח
     }, delay);
   };
 
+  /* ─── אישור האבחון ומעבר לשלב 2 ─── */
   const confirmDiagnosis = () => { setStep(2); setCity(null); setCityQ(""); setDate(""); setTime(""); setResults(false); };
 
   const BackIcon = isRTL ? IconForward : IconBack;
@@ -255,7 +319,7 @@ export default function BookaPro() {
         select:focus,input:focus{border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.08)}
       `}</style>
 
-      {/* NAV */}
+      {/* ═══ תפריט ניווט עליון (דבוק) ═══ */}
       <nav style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(255,255,255,.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid #E8ECF4", boxShadow: "0 1px 12px rgba(0,0,0,.04)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 24px" }}>
           <button onClick={goBack} style={{ width: 40, height: 40, borderRadius: 12, background: "#F0F4FF", border: "1px solid #E2E8F0", display: "flex", alignItems: "center", justifyContent: "center", color: "#5A6B8A", cursor: "pointer" }}><BackIcon /></button>
@@ -264,7 +328,7 @@ export default function BookaPro() {
         </div>
       </nav>
 
-      {/* STEPPER */}
+      {/* ═══ סרגל התקדמות (3 שלבים) ═══ */}
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "28px 24px 8px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
           {[1, 2, 3].map((s, i) => (
@@ -285,10 +349,10 @@ export default function BookaPro() {
 
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "20px 24px 40px" }}>
 
-        {/* STEP 1 */}
+        {/* ═══ שלב 1: צ'אט עם AI לזיהוי הבעיה ═══ */}
         {step === 1 && (
           <div style={{ background: "#FFF", borderRadius: 20, border: "1px solid #E8ECF4", boxShadow: "0 4px 24px rgba(0,0,0,.03)", animation: "fadeUp .4s", overflow: "hidden", display: "flex", flexDirection: "column", height: "min(65vh, 540px)" }}>
-            {/* Chat header */}
+            {/* ─── כותרת הצ'אט (אווטאר הבוט + סטטוס) ─── */}
             <div style={{ padding: "16px 20px", borderBottom: "1px solid #E8ECF4", display: "flex", alignItems: "center", gap: 12 }}>
               <div style={{ width: 38, height: 38, borderRadius: "50%", background: "linear-gradient(135deg,#2563EB,#1D4ED8)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <span style={{ fontSize: 18 }}>🤖</span>
@@ -302,7 +366,7 @@ export default function BookaPro() {
               </div>
             </div>
 
-            {/* Messages */}
+            {/* ─── אזור ההודעות - גוללים בו ─── */}
             <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
               {msgs.map((m, i) => (
                 <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", animation: "fadeUp .3s" }}>
@@ -334,7 +398,7 @@ export default function BookaPro() {
               <div ref={chatEndRef} />
             </div>
 
-            {/* Input */}
+            {/* ─── שורת קלט תחתונה (מצלמה + טקסט + שליחה) ─── */}
             <div style={{ padding: "12px 16px", borderTop: "1px solid #E8ECF4", background: "#FAFBFE" }}>
               <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
                 <button onClick={() => fileRef.current?.click()} style={{ width: 42, height: 42, borderRadius: 12, border: "2px solid #E2E8F0", background: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#2563EB", flexShrink: 0 }}>
@@ -352,7 +416,7 @@ export default function BookaPro() {
           </div>
         )}
 
-        {/* STEP 2 */}
+        {/* ═══ שלב 2: בחירת עיר, תאריך ושעה ═══ */}
         {step === 2 && (
           <div style={{ animation: "fadeUp .4s" }}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
@@ -363,6 +427,7 @@ export default function BookaPro() {
               {time && <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, background: "#F5F3FF", color: "#7C3AED", fontSize: 13, fontWeight: 600 }}>🕐 {timeLabel}</span>}
             </div>
 
+            {/* ─── טופס בחירת מיקום/תאריך/שעה (מוצג עד לחיצה על "חפש") ─── */}
             {results === false && (
               <div style={{ background: "#FFF", borderRadius: 20, border: "1px solid #E8ECF4", padding: "28px 24px", marginBottom: 20, boxShadow: "0 4px 24px rgba(0,0,0,.03)" }}>
                 <h2 style={{ fontFamily: "'Outfit'", fontSize: 22, fontWeight: 700, color: "#1A2B4A", marginBottom: 6 }}>{t("bp_when_where")}</h2>
@@ -420,6 +485,7 @@ export default function BookaPro() {
               </div>
             )}
 
+            {/* ─── רשימת מקצוענים זמינים (מוצגת אחרי חיפוש) ─── */}
             {results === true && city && (
               <div style={{ background: "#FFF", borderRadius: 20, border: "1px solid #E8ECF4", padding: "28px 24px", boxShadow: "0 4px 24px rgba(0,0,0,.03)", animation: "fadeUp .4s" }}>
                 <h2 style={{ fontFamily: "'Outfit'", fontSize: 22, fontWeight: 700, color: "#1A2B4A", marginBottom: 6 }}>{t("bp_available_in")} {city} 🏆</h2>
@@ -451,7 +517,7 @@ export default function BookaPro() {
         )}
       </div>
 
-      {/* MODAL */}
+      {/* ═══ מודל אישור הזמנה (מוצג כשלוחצים על מקצוען) ═══ */}
       {modal && (
         <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, animation: "fadeIn .25s" }}>
           <div onClick={() => setModal(null)} style={{ position: "absolute", inset: 0, background: "rgba(15,23,42,.55)", backdropFilter: "blur(6px)" }} />

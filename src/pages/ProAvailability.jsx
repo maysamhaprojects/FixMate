@@ -15,210 +15,237 @@
  * =============================================
  */
 
-import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { getLang, getDir } from "../context/LanguageContext";
+/* ═══════════════════════════════════════════════
+   ייבואים - הכלים שצריך
+   ═══════════════════════════════════════════════ */
+import { useState, useEffect, useRef } from "react";          // useState=זיכרון | useEffect=הרצה בזמן | useRef=הפניה
+import { useNavigate } from "react-router-dom";                // הוק לניווט
+import { getLang, getDir } from "../context/LanguageContext";  // כלי שפה
 
-/* ─── tiny helpers ─── */
-const pad  = (n) => String(n).padStart(2, "0");
-const fmt  = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-const today = fmt(new Date());
+/* ─── פונקציות עזר קטנות לעבודה עם תאריכים ─── */
+const pad  = (n) => String(n).padStart(2, "0");                                                // מוסיף 0 לפני מספר חד-ספרתי (7 → "07")
+const fmt  = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;            // תאריך בפורמט "YYYY-MM-DD"
+const today = fmt(new Date());                                                                   // התאריך של היום
 
-/* ─── icons ─── */
+/* ─── אייקונים (כל אחד מבוסס על רכיב Ico משותף) ─── */
+// רכיב בסיסי ליצירת SVG - מקבל נתיב ציור, גודל, ועובי קו
 const Ico = ({ d, s = 18, w = 2 }) => (
   <svg width={s} height={s} viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
     {typeof d === "string" ? <path d={d}/> : d}
   </svg>
 );
-const IcoBack     = () => <Ico s={17} d={<polyline points="15 18 9 12 15 6"/>}/>;
-const IcoLeft     = () => <Ico s={16} d={<polyline points="15 18 9 12 15 6"/>}/>;
-const IcoRight    = () => <Ico s={16} d={<polyline points="9 18 15 12 9 6"/>}/>;
-const IcoPlus     = () => <Ico s={15} d={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>}/>;
-const IcoTrash    = () => <Ico s={14} d={<><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></>}/>;
-const IcoClock    = () => <Ico s={13} d={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>}/>;
-const IcoBlock    = () => <Ico s={15} d={<><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></>}/>;
-const IcoCheck    = () => <Ico s={13} d={<polyline points="20 6 9 17 4 12"/>}/>;
-const IcoUser     = () => <Ico s={13} d={<><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>}/>;
-const IcoCopy     = () => <Ico s={14} d={<><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></>}/>;
-const IcoWrench   = () => <Ico s={19} d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>;
-const IcoSun      = () => <Ico s={14} d={<><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></>}/>;
+const IcoBack     = () => <Ico s={17} d={<polyline points="15 18 9 12 15 6"/>}/>;                                                                                                                                                                                                // חץ חזרה לדשבורד
+const IcoLeft     = () => <Ico s={16} d={<polyline points="15 18 9 12 15 6"/>}/>;                                                                                                                                                                                                // חץ שמאלה - חודש קודם
+const IcoRight    = () => <Ico s={16} d={<polyline points="9 18 15 12 9 6"/>}/>;                                                                                                                                                                                                 // חץ ימינה - חודש הבא
+const IcoPlus     = () => <Ico s={15} d={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>}/>;                                                                                                                                                   // סימן + - להוספת חלון זמן
+const IcoTrash    = () => <Ico s={14} d={<><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></>}/>;                                                                        // פח אשפה - למחיקה
+const IcoClock    = () => <Ico s={13} d={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>}/>;                                                                                                                                                          // שעון - לזמן
+const IcoBlock    = () => <Ico s={15} d={<><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></>}/>;                                                                                                                                              // עיגול חסום - לחסימת יום
+const IcoCheck    = () => <Ico s={13} d={<polyline points="20 6 9 17 4 12"/>}/>;                                                                                                                                                                                                  // וי - לאישור
+const IcoUser     = () => <Ico s={13} d={<><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>}/>;                                                                                                                                             // דמות - ללקוח
+const IcoCopy     = () => <Ico s={14} d={<><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></>}/>;                                                                                                           // דפים - להעתקה
+const IcoWrench   = () => <Ico s={19} d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>;                                                                              // מפתח ברגים - לוגו
+const IcoSun      = () => <Ico s={14} d={<><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></>}/>;   // שמש - להוספה מהירה
 
-/* ── Mock Data ── */
-const t0 = new Date();
+/* ═══════════════════════════════════════════════
+   נתונים לדוגמה (MOCK) - משמשים עד שהשרת יחזיר נתונים אמיתיים
+   ═══════════════════════════════════════════════ */
+const t0 = new Date();   // התאריך של היום
+
+// ─── חלונות זמן לדוגמה (לפי תאריכים) ───
+// כל חלון זמן: id, שעת התחלה, שעת סיום, האם תפוס, ושם הלקוח (אם תפוס)
 const MOCK_SLOTS = {
-  [fmt(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate()))]: [
-    { id:"s1", startTime:"09:00", endTime:"10:00", booked:true,  clientName:"Sarah Cohen"   },
-    { id:"s2", startTime:"11:00", endTime:"12:00", booked:false, clientName:null            },
-    { id:"s3", startTime:"14:00", endTime:"15:30", booked:true,  clientName:"Amit Levy"     },
-    { id:"s4", startTime:"16:00", endTime:"17:00", booked:false, clientName:null            },
+  [fmt(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate()))]: [                                  // היום
+    { id:"s1", startTime:"09:00", endTime:"10:00", booked:true,  clientName:"Sarah Cohen"   },        // תפוס
+    { id:"s2", startTime:"11:00", endTime:"12:00", booked:false, clientName:null            },        // פנוי
+    { id:"s3", startTime:"14:00", endTime:"15:30", booked:true,  clientName:"Amit Levy"     },        // תפוס
+    { id:"s4", startTime:"16:00", endTime:"17:00", booked:false, clientName:null            },        // פנוי
   ],
-  [fmt(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate()+1))]: [
+  [fmt(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate()+1))]: [                                // מחר - 2 חלונות פנויים
     { id:"s5", startTime:"10:00", endTime:"11:00", booked:false, clientName:null },
     { id:"s6", startTime:"13:00", endTime:"14:00", booked:false, clientName:null },
   ],
-  [fmt(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate()+3))]: [
+  [fmt(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate()+3))]: [                                // בעוד 3 ימים - 1 תפוס
     { id:"s7", startTime:"09:00", endTime:"10:30", booked:true, clientName:"Rina Goldberg" },
   ],
-  [fmt(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate()+5))]: [
+  [fmt(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate()+5))]: [                                // בעוד 5 ימים - 1 פנוי
     { id:"s8", startTime:"15:00", endTime:"16:00", booked:false, clientName:null },
   ],
 };
+
+// ─── ימים חסומים לדוגמה ───
 const MOCK_BLOCKED = [
-  fmt(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate()+2)),
-  fmt(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate()+7)),
+  fmt(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate()+2)),   // בעוד יומיים
+  fmt(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate()+7)),   // בעוד שבוע
 ];
 
-/* ── Quick-slot presets ── */
+/* ─── תבניות מהירות - 3 פריסטים (בוקר/אחה"צ/יום מלא) ─── */
+// באנגלית
 const PRESETS_EN = [
-  { label:"Morning",   slots:[{s:"08:00",e:"09:00"},{s:"09:00",e:"10:00"},{s:"10:00",e:"11:00"}] },
-  { label:"Afternoon", slots:[{s:"13:00",e:"14:00"},{s:"14:00",e:"15:00"},{s:"15:00",e:"16:00"}] },
-  { label:"Full Day",  slots:[{s:"08:00",e:"09:00"},{s:"09:00",e:"10:00"},{s:"10:00",e:"11:00"},{s:"12:00",e:"13:00"},{s:"13:00",e:"14:00"},{s:"14:00",e:"15:00"},{s:"15:00",e:"16:00"}] },
+  { label:"Morning",   slots:[{s:"08:00",e:"09:00"},{s:"09:00",e:"10:00"},{s:"10:00",e:"11:00"}] },                                                                           // בוקר - 3 חלונות (08-11)
+  { label:"Afternoon", slots:[{s:"13:00",e:"14:00"},{s:"14:00",e:"15:00"},{s:"15:00",e:"16:00"}] },                                                                           // אחה"צ - 3 חלונות (13-16)
+  { label:"Full Day",  slots:[{s:"08:00",e:"09:00"},{s:"09:00",e:"10:00"},{s:"10:00",e:"11:00"},{s:"12:00",e:"13:00"},{s:"13:00",e:"14:00"},{s:"14:00",e:"15:00"},{s:"15:00",e:"16:00"}] },   // יום מלא - 7 חלונות
 ];
+// בעברית
 const PRESETS_HE = [
   { label:"בוקר",      slots:[{s:"08:00",e:"09:00"},{s:"09:00",e:"10:00"},{s:"10:00",e:"11:00"}] },
   { label:"אחה\"צ",    slots:[{s:"13:00",e:"14:00"},{s:"14:00",e:"15:00"},{s:"15:00",e:"16:00"}] },
   { label:"יום מלא",   slots:[{s:"08:00",e:"09:00"},{s:"09:00",e:"10:00"},{s:"10:00",e:"11:00"},{s:"12:00",e:"13:00"},{s:"13:00",e:"14:00"},{s:"14:00",e:"15:00"},{s:"15:00",e:"16:00"}] },
 ];
 
+// ─── רשימת שעות אפשרית (7:00 עד 20:30, כל חצי שעה) ───
 const HOURS = Array.from({length:14},(_,i)=>i+7).flatMap(h=>[`${pad(h)}:00`,`${pad(h)}:30`]);
 
-/* ════════════════════════════════════
-   Component
-════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   הקומפוננטה הראשית - ניהול זמינות מקצוען
+   ═══════════════════════════════════════════════ */
 export default function ProAvailability() {
-  const navigate    = useNavigate();
-  const lang        = getLang();
-  const dir         = getDir();
-  const isHe        = lang === "he";
-  const L = (en,he) => isHe ? he : en;
+  const navigate    = useNavigate();                  // כלי ניווט
+  const lang        = getLang();                       // שפה ("he"/"en")
+  const dir         = getDir();                        // כיוון ("rtl"/"ltr")
+  const isHe        = lang === "he";                   // האם עברית?
+  const L = (en,he) => isHe ? he : en;                 // פונקציית עזר לבחירת טקסט לפי שפה
 
-  const [mounted,        setMounted       ] = useState(false);
-  const [viewMonth,      setViewMonth     ] = useState(new Date(t0.getFullYear(), t0.getMonth(), 1));
-  const [selectedDate,   setSelectedDate  ] = useState(today);
-  const [slots,          setSlots         ] = useState(MOCK_SLOTS);
-  const [blocked,        setBlocked       ] = useState(MOCK_BLOCKED);
-  const [modal,          setModal         ] = useState(null); // "add" | "delete" | "block" | "preset" | "copy"
-  const [delTarget,      setDelTarget     ] = useState(null);
-  const [newStart,       setNewStart      ] = useState("09:00");
-  const [newEnd,         setNewEnd        ] = useState("10:00");
-  const [formErr,        setFormErr       ] = useState("");
-  const [toast,          setToast         ] = useState(null);
-  const toastRef = useRef(null);
+  /* ─── משתני מצב ─── */
+  const [mounted,        setMounted       ] = useState(false);                                                   // האם הקומפוננטה נטענה?
+  const [viewMonth,      setViewMonth     ] = useState(new Date(t0.getFullYear(), t0.getMonth(), 1));            // איזה חודש מוצג בלוח שנה
+  const [selectedDate,   setSelectedDate  ] = useState(today);                                                    // התאריך הנבחר (ברירת מחדל: היום)
+  const [slots,          setSlots         ] = useState(MOCK_SLOTS);                                               // מפת החלונות לפי תאריכים
+  const [blocked,        setBlocked       ] = useState(MOCK_BLOCKED);                                             // רשימת ימים חסומים
+  const [modal,          setModal         ] = useState(null);    // איזה מודל פתוח: "add" | "delete" | "block" | "preset" | "copy"
+  const [delTarget,      setDelTarget     ] = useState(null);                                                     // איזה חלון למחוק (ID)
+  const [newStart,       setNewStart      ] = useState("09:00");                                                  // שעת התחלה להוספה
+  const [newEnd,         setNewEnd        ] = useState("10:00");                                                  // שעת סיום להוספה
+  const [formErr,        setFormErr       ] = useState("");                                                       // הודעת שגיאה בטופס
+  const [toast,          setToast         ] = useState(null);                                                     // הודעה צפה (toast)
+  const toastRef = useRef(null);                                                                                   // הפנייה לטיימר של ה-toast
 
+  /* ─── אנימציית כניסה ─── */
   useEffect(()=>{ const t=setTimeout(()=>setMounted(true),40); return ()=>clearTimeout(t); },[]);
 
-  /* toast helper */
+  /* ─── פונקציית toast - מציגה הודעה צפה ונעלמת אחרי 2.8 שניות ─── */
   const showToast = (msg, type="success") => {
-    setToast({msg,type});
-    clearTimeout(toastRef.current);
-    toastRef.current = setTimeout(()=>setToast(null), 2800);
+    setToast({msg,type});                                         // מציג את ההודעה
+    clearTimeout(toastRef.current);                                // מבטל טיימר קודם
+    toastRef.current = setTimeout(()=>setToast(null), 2800);       // מגדיר טיימר להסתרה
   };
 
-  /* ── calendar ── */
-  const year  = viewMonth.getFullYear();
-  const month = viewMonth.getMonth();
-  const firstDow    = new Date(year,month,1).getDay();
-  const daysInMonth = new Date(year,month+1,0).getDate();
+  /* ─── חישובי לוח שנה ─── */
+  const year  = viewMonth.getFullYear();                           // השנה המוצגת
+  const month = viewMonth.getMonth();                              // החודש המוצג (0-11)
+  const firstDow    = new Date(year,month,1).getDay();            // באיזה יום בשבוע מתחיל החודש (0=ראשון)
+  const daysInMonth = new Date(year,month+1,0).getDate();         // כמה ימים יש בחודש
 
+  // ─── שמות ימים וחודשים בשתי שפות ───
   const DAYS_SHORT = isHe ? ["א","ב","ג","ד","ה","ו","ש"] : ["S","M","T","W","T","F","S"];
   const MONTHS     = isHe
     ? ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"]
     : ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-  /* day state */
+  /* ─── פונקציה שמחזירה את מצב היום (חסום/ריק/פנוי/חלקי/מלא) ─── */
   const dayState = (ds) => {
-    if (blocked.includes(ds))   return "blocked";
+    if (blocked.includes(ds))   return "blocked";      // אם היום חסום
     const s = slots[ds];
-    if (!s || !s.length)         return "empty";
-    if (s.every(x=>x.booked))   return "full";
-    if (s.some(x=>x.booked))    return "partial";
-    return "open";
+    if (!s || !s.length)         return "empty";        // אם אין חלונות
+    if (s.every(x=>x.booked))   return "full";          // כל החלונות תפוסים
+    if (s.some(x=>x.booked))    return "partial";       // חלק תפוסים
+    return "open";                                       // הכל פנוי
   };
 
-  /* derived */
-  const daySlots  = slots[selectedDate] ?? [];
-  const isBlocked = blocked.includes(selectedDate);
-  const isPast    = selectedDate < today;
-  const freeCount = daySlots.filter(s=>!s.booked).length;
-  const bookedCount = daySlots.filter(s=>s.booked).length;
-  const PRESETS   = isHe ? PRESETS_HE : PRESETS_EN;
+  /* ─── ערכים מחושבים על בסיס התאריך הנבחר ─── */
+  const daySlots  = slots[selectedDate] ?? [];                          // חלונות של היום הנבחר
+  const isBlocked = blocked.includes(selectedDate);                     // האם היום הנבחר חסום?
+  const isPast    = selectedDate < today;                                // האם זה יום בעבר?
+  const freeCount = daySlots.filter(s=>!s.booked).length;               // כמה חלונות פנויים
+  const bookedCount = daySlots.filter(s=>s.booked).length;              // כמה תפוסים
+  const PRESETS   = isHe ? PRESETS_HE : PRESETS_EN;                      // התבניות בשפה הנכונה
 
-  /* month totals */
-  const prefix = `${year}-${pad(month+1)}`;
-  const monthSlots    = Object.entries(slots).filter(([k])=>k.startsWith(prefix));
-  const totalFree     = monthSlots.reduce((a,[,v])=>a+v.filter(x=>!x.booked).length,0);
-  const totalBooked   = monthSlots.reduce((a,[,v])=>a+v.filter(x=>x.booked).length,0);
-  const totalBlocked  = blocked.filter(d=>d.startsWith(prefix)).length;
+  /* ─── סיכומי חודש ─── */
+  const prefix = `${year}-${pad(month+1)}`;                                                                   // תחילית התאריך של החודש הנוכחי
+  const monthSlots    = Object.entries(slots).filter(([k])=>k.startsWith(prefix));                             // חלונות של החודש
+  const totalFree     = monthSlots.reduce((a,[,v])=>a+v.filter(x=>!x.booked).length,0);                        // סה"כ פנויים
+  const totalBooked   = monthSlots.reduce((a,[,v])=>a+v.filter(x=>x.booked).length,0);                         // סה"כ תפוסים
+  const totalBlocked  = blocked.filter(d=>d.startsWith(prefix)).length;                                         // סה"כ ימים חסומים
 
-  /* ── actions ── */
+  /* ═══════════════════════════════════════════════
+     פעולות - פונקציות שמטפלות בשינויים
+     ═══════════════════════════════════════════════ */
+
+  /* ─── הוספת חלון זמן חדש ─── */
   const addSlot = () => {
-    setFormErr("");
+    setFormErr("");                                                                                                   // מנקה שגיאות קודמות
+    // בדיקה 1: שעת סיום חייבת להיות אחרי שעת התחלה
     if (newStart >= newEnd) { setFormErr(L("End time must be after start","שעת סיום אחרי התחלה")); return; }
+    // בדיקה 2: החלון החדש לא חופף לחלון קיים
     if (daySlots.some(s=>!(newEnd<=s.startTime||newStart>=s.endTime))) {
       setFormErr(L("Overlaps with an existing slot","חפיפה עם slot קיים")); return;
     }
-    const id = `s${Date.now()}`;
-    setSlots(p=>({ ...p,
+    const id = `s${Date.now()}`;                                                                                      // יצירת מזהה ייחודי
+    setSlots(p=>({ ...p,                                                                                              // מוסיף חלון חדש ומסדר לפי שעה
       [selectedDate]: [...(p[selectedDate]??[]),{id,startTime:newStart,endTime:newEnd,booked:false,clientName:null}]
                         .sort((a,b)=>a.startTime.localeCompare(b.startTime))
     }));
-    setModal(null); setNewStart("09:00"); setNewEnd("10:00");
-    showToast(L("Slot added ✓","חלון זמן נוסף ✓"));
+    setModal(null); setNewStart("09:00"); setNewEnd("10:00");                                                         // סוגר מודל + איפוס שעות
+    showToast(L("Slot added ✓","חלון זמן נוסף ✓"));                                                                    // הודעת הצלחה
   };
 
+  /* ─── מחיקת חלון זמן ─── */
   const deleteSlot = () => {
-    setSlots(p=>({ ...p, [selectedDate]:(p[selectedDate]??[]).filter(s=>s.id!==delTarget) }));
+    setSlots(p=>({ ...p, [selectedDate]:(p[selectedDate]??[]).filter(s=>s.id!==delTarget) }));                         // מסיר את החלון
     setModal(null); setDelTarget(null);
     showToast(L("Slot removed","חלון זמן הוסר"), "info");
   };
 
+  /* ─── חסימה/שחרור של יום ─── */
   const toggleBlock = () => {
-    if (isBlocked) {
-      setBlocked(p=>p.filter(d=>d!==selectedDate));
+    if (isBlocked) {                                                                                                    // אם היום חסום
+      setBlocked(p=>p.filter(d=>d!==selectedDate));                                                                    // שחרר
       showToast(L("Day unblocked ✓","היום שוחרר ✓"));
-    } else {
-      if (daySlots.some(s=>s.booked)) { setModal("block"); return; }
-      setBlocked(p=>[...p,selectedDate]);
+    } else {                                                                                                            // אם לא חסום
+      if (daySlots.some(s=>s.booked)) { setModal("block"); return; }                                                   // אם יש הזמנות - פותח מודל אישור
+      setBlocked(p=>[...p,selectedDate]);                                                                              // אחרת - חוסם ישירות
       showToast(L("Day blocked","יום נחסם"), "warning");
     }
   };
 
+  /* ─── אישור חסימה (גם אם יש הזמנות) ─── */
   const confirmBlock = () => {
     setBlocked(p=>[...p,selectedDate]);
     setModal(null);
     showToast(L("Day blocked","יום נחסם"), "warning");
   };
 
+  /* ─── יישום תבנית מהירה (בוקר/אחה"צ/יום מלא) ─── */
   const applyPreset = (preset) => {
-    const existing = (slots[selectedDate]??[]).filter(s=>s.booked); // שמור תפוסים
+    const existing = (slots[selectedDate]??[]).filter(s=>s.booked);                                                     // שומר חלונות תפוסים
     const newOnes  = preset.slots
-      .filter(({s,e})=>!existing.some(x=>!(e<=x.startTime||s>=x.endTime)))
-      .map(({s,e})=>({id:`s${Date.now()}-${s}`,startTime:s,endTime:e,booked:false,clientName:null}));
+      .filter(({s,e})=>!existing.some(x=>!(e<=x.startTime||s>=x.endTime)))                                              // מסנן חלונות שחופפים לתפוסים
+      .map(({s,e})=>({id:`s${Date.now()}-${s}`,startTime:s,endTime:e,booked:false,clientName:null}));                  // יוצר חלונות חדשים
     setSlots(p=>({ ...p,
-      [selectedDate]: [...existing,...newOnes].sort((a,b)=>a.startTime.localeCompare(b.startTime))
+      [selectedDate]: [...existing,...newOnes].sort((a,b)=>a.startTime.localeCompare(b.startTime))                     // מאחד ומסדר
     }));
     setModal(null);
     showToast(L(`${newOnes.length} slots added ✓`,`${newOnes.length} חלונות זמן נוספו ✓`));
   };
 
-  /* copy today's free slots to next 4 weekdays */
+  /* ─── העתקת החלונות הפנויים של היום ל-6 הימים הבאים ─── */
   const copyToWeek = () => {
-    const freeSlots = daySlots.filter(s=>!s.booked);
+    const freeSlots = daySlots.filter(s=>!s.booked);                                                                   // רק חלונות פנויים
     if (!freeSlots.length) { showToast(L("No free slots to copy","אין חלונות זמן פנויים להעתקה"),"info"); setModal(null); return; }
-    const base = new Date(selectedDate+"T12:00:00");
-    let added = 0;
+    const base = new Date(selectedDate+"T12:00:00");                                                                   // תאריך בסיס
+    let added = 0;                                                                                                      // מונה חלונות שנוספו
     setSlots(prev => {
-      const next = {...prev};
-      for (let i=1;i<=6;i++) {
+      const next = {...prev};                                                                                           // עותק של המצב הנוכחי
+      for (let i=1;i<=6;i++) {                                                                                          // לולאה על 6 הימים הבאים
         const d = new Date(base); d.setDate(d.getDate()+i);
         const ds = fmt(d);
-        if (blocked.includes(ds)) continue;
-        if (ds < today) continue;
+        if (blocked.includes(ds)) continue;                                                                             // מדלג על ימים חסומים
+        if (ds < today) continue;                                                                                       // מדלג על ימים בעבר
         const existing = next[ds]??[];
         const toAdd = freeSlots
-          .filter(fs=>!existing.some(e=>!(fs.endTime<=e.startTime||fs.startTime>=e.endTime)))
-          .map(fs=>({...fs, id:`s${Date.now()}-${ds}-${fs.startTime}`, booked:false, clientName:null}));
+          .filter(fs=>!existing.some(e=>!(fs.endTime<=e.startTime||fs.startTime>=e.endTime)))                           // מסנן חפיפות
+          .map(fs=>({...fs, id:`s${Date.now()}-${ds}-${fs.startTime}`, booked:false, clientName:null}));                // מזהים חדשים
         if (toAdd.length) { next[ds]=[...existing,...toAdd].sort((a,b)=>a.startTime.localeCompare(b.startTime)); added+=toAdd.length; }
       }
       return next;
@@ -227,21 +254,21 @@ export default function ProAvailability() {
     showToast(L(`Copied to 6 upcoming days ✓`,`הועתק ל-6 ימים הקרובים ✓`));
   };
 
-  /* slot duration label */
+  /* ─── פונקציה שמחשבת משך חלון זמן (כמו "1h 30m") ─── */
   const duration = (s,e) => {
-    const [sh,sm]=[...s.split(":").map(Number)];
-    const [eh,em]=[...e.split(":").map(Number)];
-    const m=(eh*60+em)-(sh*60+sm);
-    return m>=60 ? `${Math.floor(m/60)}h${m%60?` ${m%60}m`:""}` : `${m}m`;
+    const [sh,sm]=[...s.split(":").map(Number)];                          // פירוק שעת התחלה
+    const [eh,em]=[...e.split(":").map(Number)];                          // פירוק שעת סיום
+    const m=(eh*60+em)-(sh*60+sm);                                         // חישוב בדקות
+    return m>=60 ? `${Math.floor(m/60)}h${m%60?` ${m%60}m`:""}` : `${m}m`; // פורמט: "1h 30m" או "45m"
   };
 
-  /* status colors */
+  /* ─── צבעי סטטוס לכל מצב של יום ─── */
   const S = {
-    blocked: { bar:"#EF4444", ring:"#FCA5A5", bg:"#FEF2F2", dot:"#EF4444"  },
-    full:    { bar:"#3B82F6", ring:"#93C5FD", bg:"#EFF6FF", dot:"#3B82F6"  },
-    partial: { bar:"#F59E0B", ring:"#FCD34D", bg:"#FFFBEB", dot:"#F59E0B"  },
-    open:    { bar:"#10B981", ring:"#6EE7B7", bg:"#ECFDF5", dot:"#10B981"  },
-    empty:   { bar:"transparent", ring:"transparent", bg:"transparent", dot:"transparent" },
+    blocked: { bar:"#EF4444", ring:"#FCA5A5", bg:"#FEF2F2", dot:"#EF4444"  },                   // אדום - חסום
+    full:    { bar:"#3B82F6", ring:"#93C5FD", bg:"#EFF6FF", dot:"#3B82F6"  },                   // כחול - מלא
+    partial: { bar:"#F59E0B", ring:"#FCD34D", bg:"#FFFBEB", dot:"#F59E0B"  },                   // כתום - חלקי
+    open:    { bar:"#10B981", ring:"#6EE7B7", bg:"#ECFDF5", dot:"#10B981"  },                   // ירוק - פנוי
+    empty:   { bar:"transparent", ring:"transparent", bg:"transparent", dot:"transparent" },    // שקוף - ריק
   };
 
   return (
@@ -267,7 +294,7 @@ export default function ProAvailability() {
         ::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:4px;}
       `}</style>
 
-      {/* ══ NAVBAR ══ */}
+      {/* ═══ ניווט עליון (דבוק למעלה) ═══ */}
       <nav style={{background:"#FFF",borderBottom:"1px solid #E2E8F0",boxShadow:"0 1px 8px rgba(0,0,0,.04)",position:"sticky",top:0,zIndex:100}}>
         <div style={{maxWidth:1120,margin:"0 auto",padding:"12px 26px",display:"flex",alignItems:"center",justifyContent:"space-between",direction:"ltr"}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -281,10 +308,10 @@ export default function ProAvailability() {
         </div>
       </nav>
 
-      {/* ══ MAIN ══ */}
+      {/* ═══ תוכן ראשי ═══ */}
       <main style={{maxWidth:1120,margin:"0 auto",padding:"26px 26px 70px"}}>
 
-        {/* header */}
+        {/* ─── כותרת + 3 תיבות סטטיסטיקה של החודש ─── */}
         <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",marginBottom:22,flexWrap:"wrap",gap:12,animation:"fadeUp .35s"}}>
           <div>
             <h1 style={{fontFamily:"'Outfit'",fontSize:25,fontWeight:800,color:"#1A2B4A",marginBottom:3}}>{L("Manage Availability","ניהול זמינות")}</h1>
@@ -305,13 +332,13 @@ export default function ProAvailability() {
           </div>
         </div>
 
-        {/* ── LAYOUT ── */}
+        {/* ═══ פריסה - 2 עמודות: לוח שנה + פאנל ימין ═══ */}
         <div className="av-grid" style={{display:"flex",gap:20,alignItems:"flex-start"}}>
 
-          {/* ════════════ CALENDAR ════════════ */}
+          {/* ═══════════════ עמודה שמאל: לוח שנה ═══════════════ */}
           <div className="cal-wrap" style={{background:"#FFF",borderRadius:22,border:"1px solid #E2E8F0",boxShadow:"0 2px 18px rgba(0,0,0,.05)",padding:"22px",minWidth:320,width:320,flexShrink:0,animation:"fadeUp .38s"}}>
 
-            {/* nav */}
+            {/* ─── שורת ניווט חודשים (חץ שמאל + שם חודש + חץ ימין) ─── */}
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18,direction:"ltr"}}>
               <button onClick={()=>setViewMonth(new Date(year,month-1,1))} className="hb"
                 style={{width:34,height:34,borderRadius:10,border:"1px solid #E2E8F0",background:"#F8FAFF",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#64748B"}}>
@@ -324,16 +351,18 @@ export default function ProAvailability() {
               </button>
             </div>
 
-            {/* day names */}
+            {/* ─── שמות הימים (א ב ג ד ה ו ש) ─── */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:6}}>
               {DAYS_SHORT.map((d,i)=>(
                 <div key={i} style={{textAlign:"center",fontSize:11,fontWeight:700,color:"#94A3B8",padding:"3px 0"}}>{d}</div>
               ))}
             </div>
 
-            {/* cells */}
+            {/* ─── תאי הימים (כולל ריקים בהתחלה אם החודש לא מתחיל ביום ראשון) ─── */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3}}>
+              {/* תאים ריקים לפני היום הראשון של החודש */}
               {Array.from({length:firstDow}).map((_,i)=><div key={`x${i}`}/>)}
+              {/* תא לכל יום של החודש */}
               {Array.from({length:daysInMonth},(_,i)=>{
                 const day = i+1;
                 const ds  = `${year}-${pad(month+1)}-${pad(day)}`;
@@ -361,7 +390,7 @@ export default function ProAvailability() {
               })}
             </div>
 
-            {/* legend */}
+            {/* ─── מקרא (פנוי/חלקי/מלא/חסום) ─── */}
             <div style={{marginTop:18,paddingTop:14,borderTop:"1px solid #F1F5F9",display:"flex",flexWrap:"wrap",gap:10,justifyContent:"center"}}>
               {[
                 {dot:"#10B981",label:L("Free","פנוי")},
@@ -377,10 +406,10 @@ export default function ProAvailability() {
             </div>
           </div>
 
-          {/* ════════════ RIGHT PANEL ════════════ */}
+          {/* ═══════════════ עמודה ימין: פרטי היום + רשימת חלונות ═══════════════ */}
           <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:14}}>
 
-            {/* ── Day header ── */}
+            {/* ─── כותרת היום: תאריך + תגיות סטטוס + כפתורי פעולה ─── */}
             <div style={{background:"#FFF",borderRadius:18,border:"1px solid #E2E8F0",padding:"18px 22px",boxShadow:"0 2px 12px rgba(0,0,0,.04)",animation:"fadeUp .4s"}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:14}}>
 
@@ -429,7 +458,7 @@ export default function ProAvailability() {
               </div>
             </div>
 
-            {/* ── Slots list / states ── */}
+            {/* ═══ אזור תוכן: יום חסום / ללא חלונות / רשימת חלונות ═══ */}
             {isBlocked ? (
               <div style={{background:"#FEF2F2",border:"1.5px solid #FECACA",borderRadius:18,padding:"44px 24px",textAlign:"center",animation:"fadeUp .4s"}}>
                 <div style={{fontSize:44,marginBottom:12}}>🚫</div>
@@ -511,9 +540,7 @@ export default function ProAvailability() {
         </div>
       </main>
 
-      {/* ════════════════════════════
-          MODAL: Add Slot
-      ════════════════════════════ */}
+      {/* ═══ מודל 1: הוספת חלון זמן ═══ */}
       {modal==="add"&&(
         <Overlay onClose={()=>setModal(null)}>
           <div style={{fontFamily:"inherit",direction:dir}}>
@@ -541,9 +568,7 @@ export default function ProAvailability() {
         </Overlay>
       )}
 
-      {/* ════════════════════════════
-          MODAL: Delete Slot
-      ════════════════════════════ */}
+      {/* ═══ מודל 2: מחיקת חלון זמן (אישור) ═══ */}
       {modal==="delete"&&(
         <Overlay onClose={()=>setModal(null)}>
           <div style={{textAlign:"center",direction:dir}}>
@@ -560,9 +585,7 @@ export default function ProAvailability() {
         </Overlay>
       )}
 
-      {/* ════════════════════════════
-          MODAL: Block Day (has bookings)
-      ════════════════════════════ */}
+      {/* ═══ מודל 3: חסימת יום עם הזמנות קיימות (אישור) ═══ */}
       {modal==="block"&&(
         <Overlay onClose={()=>setModal(null)}>
           <div style={{textAlign:"center",direction:dir}}>
@@ -579,9 +602,7 @@ export default function ProAvailability() {
         </Overlay>
       )}
 
-      {/* ════════════════════════════
-          MODAL: Quick Preset
-      ════════════════════════════ */}
+      {/* ═══ מודל 4: הוספה מהירה (בוקר/אחה"צ/יום מלא) ═══ */}
       {modal==="preset"&&(
         <Overlay onClose={()=>setModal(null)}>
           <div style={{direction:dir}}>
@@ -606,9 +627,7 @@ export default function ProAvailability() {
         </Overlay>
       )}
 
-      {/* ════════════════════════════
-          MODAL: Copy to Week
-      ════════════════════════════ */}
+      {/* ═══ מודל 5: העתקה לשבוע (6 ימים הבאים) ═══ */}
       {modal==="copy"&&(
         <Overlay onClose={()=>setModal(null)}>
           <div style={{textAlign:"center",direction:dir}}>
@@ -625,9 +644,7 @@ export default function ProAvailability() {
         </Overlay>
       )}
 
-      {/* ════════════════════════════
-          TOAST
-      ════════════════════════════ */}
+      {/* ═══ Toast - הודעה צפה בתחתית המסך (נעלמת אחרי 2.8 שניות) ═══ */}
       {toast&&(
         <div style={{position:"fixed",bottom:28,left:"50%",transform:"translateX(-50%)",zIndex:500,animation:"toastIn .28s",pointerEvents:"none"}}>
           <div style={{padding:"12px 22px",borderRadius:22,background:toast.type==="warning"?"#FEF3C7":toast.type==="info"?"#EFF6FF":"#1A2B4A",color:toast.type==="warning"?"#92400E":toast.type==="info"?"#1D4ED8":"#FFF",fontSize:14,fontWeight:600,boxShadow:"0 8px 30px rgba(0,0,0,.16)",whiteSpace:"nowrap",fontFamily:"inherit"}}>
@@ -639,8 +656,11 @@ export default function ProAvailability() {
   );
 }
 
-/* ─── Small reusable sub-components ─── */
+/* ═══════════════════════════════════════════════
+   קומפוננטות משנה קטנות - לשימוש חוזר
+   ═══════════════════════════════════════════════ */
 
+// ─── Overlay = הרקע השחור של המודל + הקופסה הלבנה ───
 function Overlay({children,onClose}){
   return(
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(15,23,42,.52)",backdropFilter:"blur(5px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,padding:20}}>
@@ -652,6 +672,7 @@ function Overlay({children,onClose}){
   );
 }
 
+// ─── כותרת מודל - אימוג'י גדול + כותרת + תת-כותרת ───
 function ModalHeader({emoji,title,sub}){
   return(
     <div style={{marginBottom:22,textAlign:"center"}}>
@@ -662,6 +683,7 @@ function ModalHeader({emoji,title,sub}){
   );
 }
 
+// ─── כפתורי מודל - ביטול + אישור ───
 function ModalActions({onCancel,onConfirm,confirmLabel,confirmBg,confirmGlow}){
   return(
     <div style={{display:"flex",gap:10,marginTop:20}}>
@@ -677,6 +699,7 @@ function ModalActions({onCancel,onConfirm,confirmLabel,confirmBg,confirmGlow}){
   );
 }
 
+// ─── שדה בחירת שעה (dropdown עם כל השעות מ-07:00 עד 20:30) ───
 function TimeSelect({label,value,onChange}){
   const HOURS_LIST = Array.from({length:14},(_,i)=>i+7).flatMap(h=>[`${String(h).padStart(2,"0")}:00`,`${String(h).padStart(2,"0")}:30`]);
   return(
@@ -693,6 +716,7 @@ function TimeSelect({label,value,onChange}){
   );
 }
 
+// ─── קופסת שגיאה אדומה עם אייקון ⚠️ ───
 function ErrBox({msg}){
   return(
     <div style={{background:"#FEF2F2",border:"1px solid #FECACA",borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:13,color:"#DC2626",fontWeight:600,display:"flex",alignItems:"center",gap:6}}>

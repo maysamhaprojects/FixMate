@@ -258,12 +258,14 @@ function delay(ms) {
    כשמחברים בקאנד אמיתי
 ══════════════════════════════════════════ */
 export async function analyzeIssue({ text, imageBase64 }) {
-  // 🚩 MOCK — replace this entire function body with a real API call
-  await delay(1800);
+  const response = await fetch('http://localhost:8080/api/snap/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, imageBase64 }),
+  });
 
-  const isHebrew = text ? /[\u05d0-\u05ea]/.test(text) : false;
-  const key = matchByKeywords(text) || "leaky_faucet";
-  return isHebrew ? MOCK_RESPONSES[key].he : MOCK_RESPONSES[key].en;
+  const data = await response.json();
+  return data;
 }
 
 /* ─── Quick-select category list ─── */
