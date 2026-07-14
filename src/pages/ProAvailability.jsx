@@ -6,6 +6,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getLang, getDir } from "../context/LanguageContext";
+import { apiFetch } from "../services/api";
 
 const DAYS = [
   { key: "SUNDAY",    he: "ראשון",  en: "Sunday" },
@@ -39,10 +40,7 @@ export default function ProAvailability() {
 
   /* טעינת הזמינות הקיימת מהשרת */
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch("http://localhost:8080/api/pro/availability", {
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-    })
+    apiFetch("/api/pro/availability")
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -72,13 +70,11 @@ export default function ProAvailability() {
 
   const handleSave = async () => {
     setSaving(true);
-    const token = localStorage.getItem("token");
     try {
       // שומרים כל יום בנפרד (הבקאנד מקבל יום בודד ומעדכן/יוצר)
       for (const row of week) {
-        await fetch("http://localhost:8080/api/pro/availability", {
+        await apiFetch("/api/pro/availability", {
           method: "PUT",
-          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
           body: JSON.stringify({
             dayOfWeek: row.day,
             startTime: row.start + ":00",

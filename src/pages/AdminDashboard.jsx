@@ -18,6 +18,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getLang, getDir } from "../context/LanguageContext";
+import { apiFetch } from "../services/api";
 
 const useL = () => {
   const lang = getLang();
@@ -189,12 +190,9 @@ export default function AdminDashboard() {
 
   /* ─── משיכת בעלי המקצוע הממתינים לאישור מהשרת ─── */
   const loadPendingPros = async () => {
-    const token = localStorage.getItem("token");
     setProError("");
     try {
-      const r = await fetch("http://localhost:8080/api/admin/pros/pending", {
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-      });
+      const r = await apiFetch("/api/admin/pros/pending");
       const raw = await r.text();
       if (!r.ok) {
         setProError("סטטוס " + r.status + " — " + raw.slice(0, 300));
@@ -217,20 +215,17 @@ export default function AdminDashboard() {
 
   /* ─── משיכת סטטיסטיקה, משתמשים והזמנות אמיתיים ─── */
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const auth = { headers: { "Content-Type": "application/json", Authorization: "Bearer " + token } };
-
-    fetch("http://localhost:8080/api/user/me", auth)
+    apiFetch("/api/user/me")
       .then((r) => (r.ok ? r.json() : null))
       .then((u) => { if (u) { setMe({ name: u.fullName || "Admin", email: u.email || "", profilePicture: u.profilePicture || "" }); localStorage.setItem("profilePicture", u.profilePicture || ""); } })
       .catch(() => {});
 
-    fetch("http://localhost:8080/api/admin/stats", auth)
+    apiFetch("/api/admin/stats")
       .then((r) => (r.ok ? r.json() : null))
       .then((s) => { if (s) setStats(s); })
       .catch(() => {});
 
-    fetch("http://localhost:8080/api/admin/users", auth)
+    apiFetch("/api/admin/users")
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -249,7 +244,7 @@ export default function AdminDashboard() {
       })
       .catch(() => {});
 
-    fetch("http://localhost:8080/api/admin/orders", auth)
+    apiFetch("/api/admin/orders")
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -267,7 +262,7 @@ export default function AdminDashboard() {
       .catch(() => {});
 
     /* תלונות אמיתיות מהשרת */
-    fetch("http://localhost:8080/api/admin/complaints", auth)
+    apiFetch("/api/admin/complaints")
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -293,7 +288,7 @@ export default function AdminDashboard() {
       .catch(() => {});
 
     /* דירוגים אמיתיים מהשרת */
-    fetch("http://localhost:8080/api/admin/ratings", auth)
+    apiFetch("/api/admin/ratings")
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -319,10 +314,8 @@ export default function AdminDashboard() {
 
   /* actions */
   const approvePro  = (id) => {
-    const token = localStorage.getItem("token");
-    fetch("http://localhost:8080/api/admin/pros/" + id + "/approve", {
+    apiFetch("/api/admin/pros/" + id + "/approve", {
       method: "PUT",
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
     })
       .then((r) => {
         if (!r.ok) throw new Error("failed");
@@ -333,11 +326,9 @@ export default function AdminDashboard() {
       .finally(() => setModal(null));
   };
   const rejectPro = (id, reason) => {
-    const token = localStorage.getItem("token");
     const q = reason && reason.trim() ? "?reason=" + encodeURIComponent(reason.trim()) : "";
-    fetch("http://localhost:8080/api/admin/pros/" + id + "/reject" + q, {
+    apiFetch("/api/admin/pros/" + id + "/reject" + q, {
       method: "PUT",
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
     })
       .then((r) => {
         if (!r.ok) throw new Error("failed");
@@ -348,10 +339,8 @@ export default function AdminDashboard() {
       .finally(() => { setModal(null); setRejectReason(""); });
   };
   const resolveComp = (id, response) => {
-    const token = localStorage.getItem("token");
-    fetch("http://localhost:8080/api/admin/complaints/" + id + "/status", {
+    apiFetch("/api/admin/complaints/" + id + "/status", {
       method: "PUT",
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
       body: JSON.stringify({ status: "RESOLVED", response: response || "" }),
     })
       .then((r) => {
@@ -363,10 +352,8 @@ export default function AdminDashboard() {
       .finally(() => { setModal(null); setCompResponse(""); });
   };
   const toggleUser = (id) => {
-    const token = localStorage.getItem("token");
-    fetch("http://localhost:8080/api/admin/users/" + id + "/toggle-suspend", {
+    apiFetch("/api/admin/users/" + id + "/toggle-suspend", {
       method: "PUT",
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
     })
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
@@ -394,10 +381,8 @@ export default function AdminDashboard() {
         canvas.width = w; canvas.height = h;
         canvas.getContext("2d").drawImage(img, 0, 0, w, h);
         const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
-        const token = localStorage.getItem("token");
-        fetch("http://localhost:8080/api/user/me", {
+        apiFetch("/api/user/me", {
           method: "PUT",
-          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
           body: JSON.stringify({ fullName: me.name, profilePicture: dataUrl }),
         })
           .then((r) => (r.ok ? r.json() : null))

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getLang, getDir } from "../context/LanguageContext";
+import { apiFetch } from "../services/api";
 
 /*
   FixMate - Pro Profile (Editable)
@@ -153,10 +154,7 @@ export default function ProProfile() {
 
   /* טעינת הביקורות האמיתיות */
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch("http://localhost:8080/api/pro/reviews", {
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-    })
+    apiFetch("/api/pro/reviews")
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -172,10 +170,7 @@ export default function ProProfile() {
 
   /* טעינת הפרופיל האמיתי מהשרת */
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch("http://localhost:8080/api/pro/profile", {
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-    })
+    apiFetch("/api/pro/profile")
       .then((r) => (r.ok ? r.json() : null))
       .then((p) => {
         if (!p) return;
@@ -203,10 +198,8 @@ export default function ProProfile() {
   /* שומר תמונה מיד לשרת (כמו אצל הלקוח — לחיצה ומיד נשמר) */
   const savePhoto = (dataUrl) => {
     setProfilePicture(dataUrl);
-    const token = localStorage.getItem("token");
-    fetch("http://localhost:8080/api/user/me", {
+    apiFetch("/api/user/me", {
       method: "PUT",
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
       body: JSON.stringify({ fullName: fullName || "", profilePicture: dataUrl }),
     })
       .then((r) => (r.ok ? r.json() : null))
@@ -240,12 +233,10 @@ export default function ProProfile() {
   const removePhoto = () => savePhoto("");
 
   const handleSave = async () => {
-    const token = localStorage.getItem("token");
     try {
       // 1) פרטי המקצוע (מקצוע, תיאור, עיר, מחיר) — /api/pro/profile
-      await fetch("http://localhost:8080/api/pro/profile", {
+      await apiFetch("/api/pro/profile", {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify({
           specialty: specialty || null,
           bio: bio || null,
@@ -255,9 +246,8 @@ export default function ProProfile() {
         }),
       });
       // 2) שם וטלפון — /api/user/me
-      const r2 = await fetch("http://localhost:8080/api/user/me", {
+      const r2 = await apiFetch("/api/user/me", {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify({ fullName: fullName.trim(), phone: phone.trim(), profilePicture: profilePicture || "" }),
       });
       if (r2.ok) { const d = await r2.json(); localStorage.setItem("fullName", d.fullName || fullName.trim()); localStorage.setItem("profilePicture", d.profilePicture || ""); }

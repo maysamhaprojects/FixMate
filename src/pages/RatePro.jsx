@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useLang, translate, getLang, getDir } from "../context/LanguageContext";
+import { apiFetch } from "../services/api";
 
 export default function RatePro() {
   var navigate = useNavigate();
@@ -39,9 +40,8 @@ export default function RatePro() {
     setSubmitErr("");
     try {
       var token = localStorage.getItem("token");
-      var r = await fetch("http://localhost:8080/api/client/ratings", {
+      var r = await apiFetch("/api/client/ratings", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify({ bookingId: parseInt(bookingId), score: rating, comment: comment.trim() }),
       });
       if (!r.ok) {

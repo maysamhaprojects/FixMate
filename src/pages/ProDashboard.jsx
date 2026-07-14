@@ -23,6 +23,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { translate, getLang, getDir } from "../context/LanguageContext";
+import { apiFetch } from "../services/api";
 
 /* ─────────────────────────────────────────
    Icons – SVG ידניים, ללא ספריות חיצוניות
@@ -175,10 +176,7 @@ export default function ProDashboard() {
 
   /* משיכת הפרופיל האמיתי של בעל המקצוע המחובר */
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch("http://localhost:8080/api/pro/profile", {
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-    })
+    apiFetch("/api/pro/profile")
       .then((r) => (r.ok ? r.json() : null))
       .then((p) => {
         if (!p) return;
@@ -198,10 +196,7 @@ export default function ProDashboard() {
 
   /* משיכת הסטטיסטיקות האמיתיות של בעל המקצוע */
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch("http://localhost:8080/api/pro/stats", {
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-    })
+    apiFetch("/api/pro/stats")
       .then((r) => (r.ok ? r.json() : null))
       .then((s) => {
         if (!s) return;
@@ -218,10 +213,7 @@ export default function ProDashboard() {
 
   /* משיכת הביקורות האמיתיות */
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch("http://localhost:8080/api/pro/reviews", {
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-    })
+    apiFetch("/api/pro/reviews")
       .then((r) => (r.ok ? r.json() : null))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -253,10 +245,7 @@ export default function ProDashboard() {
 
   /* משיכת ההתראות האמיתיות */
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch("http://localhost:8080/api/pro/notifications", {
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-    })
+    apiFetch("/api/pro/notifications")
       .then((r) => (r.ok ? r.json() : null))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -295,10 +284,7 @@ export default function ProDashboard() {
 
   /* משיכת לוח הזמנים של היום */
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch("http://localhost:8080/api/pro/schedule/today", {
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-    })
+    apiFetch("/api/pro/schedule/today")
       .then((r) => (r.ok ? r.json() : null))
       .then((list) => {
         if (!Array.isArray(list)) return;

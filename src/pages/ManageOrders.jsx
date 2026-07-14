@@ -20,6 +20,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { translate, getLang, getDir } from "../context/LanguageContext";
+import { apiFetch } from "../services/api";
 
 /* ── Icons ── */
 const IconWrench = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;
@@ -114,10 +115,7 @@ export default function ManageOrders() {
 
   /* טעינת ההזמנות האמיתיות של בעל המקצוע */
   const loadOrders = () => {
-    const token = localStorage.getItem("token");
-    fetch("http://localhost:8080/api/pro/orders", {
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-    })
+    apiFetch("/api/pro/orders")
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -169,11 +167,9 @@ export default function ManageOrders() {
     // סטטוס לשרת (BookingStatus) וסטטוס לתצוגה
     const serverStatus = { accept: "CONFIRMED", start: "IN_PROGRESS", finish: "COMPLETED", reject: "CANCELLED" }[actionId];
     const uiStatus     = { accept: "confirmed", start: "in_progress", finish: "done",      reject: "cancelled" }[actionId];
-    const token = localStorage.getItem("token");
     try {
-      const r = await fetch("http://localhost:8080/api/pro/orders/" + order.bookingId + "/status", {
+      const r = await apiFetch("/api/pro/orders/" + order.bookingId + "/status", {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify({ status: serverStatus }),
       });
       if (r.ok) {

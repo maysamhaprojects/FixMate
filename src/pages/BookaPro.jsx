@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLang, LangToggle } from "../context/LanguageContext";
 import { ISRAEL_CITIES } from "../data/israelCities";
+import { apiFetch } from "../services/api";
 
 /*
   FixMate - Book a Pro (with AI Chatbot Step 1)
@@ -220,10 +221,7 @@ export default function BookaPro() {
   useEffect(() => {
     if (!results) return;
     setProsLoading(true);
-    const token = localStorage.getItem("token");
-    fetch("http://localhost:8080/api/client/pros", {
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-    })
+    apiFetch("/api/client/pros")
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         const arr = Array.isArray(list) ? list : [];
@@ -269,11 +267,9 @@ export default function BookaPro() {
     if (!modal.userId) { setBookErr(isHe ? "לא ניתן להזמין בעל מקצוע זה" : "Cannot book this professional"); return; }
     setBooking(true);
     setBookErr("");
-    const token = localStorage.getItem("token");
     try {
-      const r = await fetch("http://localhost:8080/api/client/bookings", {
+      const r = await apiFetch("/api/client/bookings", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify({
           proId: modal.userId,
           serviceType: catLabel || modal.specialty || "",

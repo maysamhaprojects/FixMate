@@ -6,6 +6,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLang } from "../context/LanguageContext";
+import { apiFetch } from "../services/api";
 
 /* ─── Icons ─── */
 const IconUser = (p) => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>);
@@ -40,9 +41,7 @@ export default function ClientProfile() {
       setLoading(false);
       return;
     }
-    fetch("http://localhost:8080/api/user/me", {
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-    })
+    apiFetch("/api/user/me")
       .then(async (r) => {
         if (!r.ok) {
           let body = "";
@@ -103,10 +102,8 @@ export default function ClientProfile() {
     }
     setSaving(true); setMessage(null);
     try {
-      const token = localStorage.getItem("token");
-      const r = await fetch("http://localhost:8080/api/user/me", {
+      const r = await apiFetch("/api/user/me", {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify({ fullName: fullName.trim(), phone: phone.trim(), email: email.trim(), profilePicture: profilePicture || "" }),
       });
       if (!r.ok) {

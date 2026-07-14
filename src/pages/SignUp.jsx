@@ -38,6 +38,7 @@ import "../styles/auth.css";
 import { useLang } from "../context/LanguageContext";
 import { COUNTRIES } from "../data/countries";
 import { ISRAEL_CITIES } from "../data/israelCities";
+import { apiFetch } from "../services/api";
 
 /* ─────────────────────────────────────────────
    SVG Icon Components
@@ -528,9 +529,8 @@ export default function SignUp() {
         body.documents = docs.length > 0 ? JSON.stringify(docs) : null;
       }
 
-      const response = await fetch('http://localhost:8080/api/auth/register', {
+      const response = await apiFetch('/api/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
 

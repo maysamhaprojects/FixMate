@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getLang, getDir } from "../context/LanguageContext";
+import { apiFetch } from "../services/api";
 
 const IconBack = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>;
 const IconCamera = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>;
@@ -264,9 +265,8 @@ export default function SnapAnIssue() {
     } else {
       // התאמה מקומית נכשלה — פונים לשרת (תומך גם בעברית וגם באנגלית)
       try {
-        const res = await fetch("http://localhost:8080/api/snap/analyze", {
+        const res = await apiFetch("/api/snap/analyze", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text }),
         });
         const data = await res.json();
