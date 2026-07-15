@@ -1,139 +1,19 @@
-import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLang, LangToggle } from "../context/LanguageContext";
-import { ISRAEL_CITIES } from "../data/israelCities";
-import { apiFetch } from "../services/api";
+import { useBooking } from "../hooks/useBooking";
+import { IconBack, IconForward, IconCheck, IconStar, IconLocation, IconClock, IconX, IconSearch, IconPin, IconCalendar, IconClockLg, IconCamera, IconImage, IconSend } from "../components/BookIcons";
+import { catIcons, CAT_LABEL_KEYS, TIME_OPTIONS } from "../data/bookingCatalog";
 
 /*
   FixMate - Book a Pro (with AI Chatbot Step 1)
   Step 1: Photo upload + AI chatbot identifies issue
   Step 2: Fill location + date + time
   Step 3: Show professionals → book
+
+  אייקונים → components/BookIcons.jsx
+  קטלוג    → data/bookingCatalog.js
 */
 
-const IconBack = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>;
-const IconForward = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>;
-const IconCheck = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>;
-const IconStar = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="#FBBF24" stroke="#FBBF24" strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>;
-const IconLocation = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>;
-const IconClock = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>;
-const IconX = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>;
-const IconSearch = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>;
-const IconPin = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>;
-const IconCalendar = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>;
-const IconClockLg = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>;
-const IconCamera = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>;
-const IconImage = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>;
-const IconSend = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>;
-
-const catIcons = { electricity:"\u26a1", plumbing:"\ud83d\udd27", painting:"\ud83c\udfa8", ac:"\u2744\ufe0f", locksmith:"\ud83d\udd11", renovation:"\ud83c\udfd7\ufe0f", carpentry:"\ud83e\ude9a", cleaning:"\ud83e\uddf9" };
-
-const CAT_IDS = ["electricity","plumbing","painting","ac","locksmith","renovation","carpentry","cleaning"];
-/* מילות מפתח להתאמת קטגוריה שנבחרה לתחום ההתמחות של בעל המקצוע (עברית + אנגלית) */
-const CAT_MATCH = {
-  electricity: ["electric", "חשמל"],
-  plumbing:    ["plumb", "אינסטלצ", "שרברב", "צנרת"],
-  painting:    ["paint", "צבע"],
-  ac:          ["ac", "hvac", "מזגן", "מיזוג"],
-  locksmith:   ["lock", "מנעול"],
-  renovation:  ["renov", "שיפוץ"],
-  carpentry:   ["carpent", "נגר"],
-  cleaning:    ["clean", "ניקיון"],
-};
-const CAT_LABEL_KEYS = { electricity:"bp_cat_electricity", plumbing:"bp_cat_plumbing", painting:"bp_cat_painting", ac:"bp_cat_ac", locksmith:"bp_cat_locksmith", renovation:"bp_cat_renovation", carpentry:"bp_cat_carpentry", cleaning:"bp_cat_cleaning" };
-
-const ISSUE_IDS = {
-  electricity: ["short_circuit","panel_replace","sockets","lighting","install_points","general_elec"],
-  plumbing: ["clog","leak","faucet","boiler","pipes","general_plumb"],
-  painting: ["full_apt","single_room","plaster","exterior"],
-  ac: ["ac_fault","ac_clean","ac_install","ac_gas"],
-  locksmith: ["door_open","lock_replace","lock_install","keys"],
-  renovation: ["gypsum","tiling","cladding","demolition"],
-  carpentry: ["furniture","closet","door_fix","custom"],
-  cleaning: ["deep_clean","post_reno","windows","carpet"],
-};
-
-/* AI diagnosis simulation - maps keywords in image "analysis" to category+issue */
-const DIAGNOSIS_MAP = [
-  { cat: "plumbing", issue: "leak", keywords: ["water","leak","pipe","drip","wet","puddle","flood","damp","moisture"], en: { title: "Water Leak Detected", desc: "I can see signs of a water leak. This appears to be a plumbing issue — specifically a pipe or faucet leak. I recommend booking a plumber to inspect and fix this before it causes further damage." }, he: { title: "\u05d6\u05d5\u05d4\u05d4 \u05e0\u05d6\u05d9\u05dc\u05ea \u05de\u05d9\u05dd", desc: "\u05d0\u05e0\u05d9 \u05de\u05d6\u05d4\u05d4 \u05e1\u05d9\u05de\u05e0\u05d9\u05dd \u05dc\u05e0\u05d6\u05d9\u05dc\u05ea \u05de\u05d9\u05dd. \u05d6\u05d5 \u05e0\u05e8\u05d0\u05d9\u05ea \u05d1\u05e2\u05d9\u05d4 \u05e9\u05dc \u05d0\u05d9\u05e0\u05e1\u05d8\u05dc\u05e6\u05d9\u05d4 \u2014 \u05db\u05e0\u05e8\u05d0\u05d4 \u05e0\u05d6\u05d9\u05dc\u05d4 \u05d1\u05e6\u05e0\u05e8\u05ea \u05d0\u05d5 \u05d1\u05e8\u05d6. \u05de\u05d5\u05de\u05dc\u05e5 \u05dc\u05d4\u05d6\u05de\u05d9\u05df \u05e9\u05e8\u05d1\u05e8\u05d1 \u05dc\u05e4\u05e0\u05d9 \u05e9\u05d4\u05e0\u05d6\u05e7 \u05d9\u05d7\u05de\u05d9\u05e8." } },
-  { cat: "plumbing", issue: "clog", keywords: ["clog","drain","blocked","sink","toilet","overflow","backup"], en: { title: "Clogged Drain Detected", desc: "This looks like a clogged drain issue. The blockage could be in the pipes or the drainage system. A professional plumber can clear this quickly." }, he: { title: "\u05e0\u05d9\u05e7\u05d5\u05d6 \u05e1\u05ea\u05d5\u05dd \u05d6\u05d5\u05d4\u05d4", desc: "\u05d6\u05d4 \u05e0\u05e8\u05d0\u05d4 \u05db\u05e0\u05d9\u05e7\u05d5\u05d6 \u05e1\u05ea\u05d5\u05dd. \u05d4\u05d7\u05e1\u05d9\u05de\u05d4 \u05d9\u05db\u05d5\u05dc\u05d4 \u05dc\u05d4\u05d9\u05d5\u05ea \u05d1\u05e6\u05e0\u05e8\u05ea \u05d0\u05d5 \u05d1\u05de\u05e2\u05e8\u05db\u05ea \u05d4\u05e0\u05d9\u05e7\u05d5\u05d6. \u05e9\u05e8\u05d1\u05e8\u05d1 \u05de\u05e7\u05e6\u05d5\u05e2\u05d9 \u05d9\u05db\u05d5\u05dc \u05dc\u05e4\u05ea\u05d5\u05e8 \u05d0\u05ea \u05d6\u05d4 \u05de\u05d4\u05e8." } },
-  { cat: "electricity", issue: "short_circuit", keywords: ["spark","electric","wire","outlet","breaker","fuse","power","blackout","socket","switch"], en: { title: "Electrical Issue Detected", desc: "I can identify signs of an electrical problem — possibly a short circuit or faulty wiring. This requires a licensed electrician for safe repair. Do not attempt to fix this yourself." }, he: { title: "\u05ea\u05e7\u05dc\u05d4 \u05d7\u05e9\u05de\u05dc\u05d9\u05ea \u05d6\u05d5\u05d4\u05ea\u05d4", desc: "\u05d0\u05e0\u05d9 \u05de\u05d6\u05d4\u05d4 \u05e1\u05d9\u05de\u05e0\u05d9\u05dd \u05dc\u05ea\u05e7\u05dc\u05d4 \u05d7\u05e9\u05de\u05dc\u05d9\u05ea \u2014 \u05db\u05e0\u05e8\u05d0\u05d4 \u05e7\u05e6\u05e8 \u05d0\u05d5 \u05ea\u05d9\u05e7\u05d5\u05df \u05d7\u05d9\u05d5\u05d5\u05d8. \u05d6\u05d4 \u05d3\u05d5\u05e8\u05e9 \u05d7\u05e9\u05de\u05dc\u05d0\u05d9 \u05de\u05d5\u05e1\u05de\u05da. \u05d0\u05dc \u05ea\u05e0\u05e1\u05d4 \u05dc\u05ea\u05e7\u05df \u05dc\u05d1\u05d3." } },
-  { cat: "ac", issue: "ac_fault", keywords: ["ac","air condition","cold","cool","compressor","vent","filter","hvac","heat","warm"], en: { title: "AC Problem Detected", desc: "This appears to be an air conditioning issue. The unit may need servicing, gas refill, or component replacement. I recommend booking an AC technician." }, he: { title: "\u05ea\u05e7\u05dc\u05d4 \u05d1\u05de\u05d6\u05d2\u05df \u05d6\u05d5\u05d4\u05ea\u05d4", desc: "\u05d6\u05d4 \u05e0\u05e8\u05d0\u05d4 \u05db\u05ea\u05e7\u05dc\u05d4 \u05d1\u05de\u05d6\u05d2\u05df. \u05d9\u05d9\u05ea\u05db\u05df \u05e9\u05d4\u05de\u05db\u05e9\u05d9\u05e8 \u05e6\u05e8\u05d9\u05da \u05d8\u05d9\u05e4\u05d5\u05dc, \u05de\u05d9\u05dc\u05d5\u05d9 \u05d2\u05d6, \u05d0\u05d5 \u05d4\u05d7\u05dc\u05e4\u05ea \u05e8\u05db\u05d9\u05d1. \u05de\u05d5\u05de\u05dc\u05e5 \u05dc\u05d4\u05d6\u05de\u05d9\u05df \u05d8\u05db\u05e0\u05d0\u05d9 \u05de\u05d6\u05d2\u05e0\u05d9\u05dd." } },
-  { cat: "painting", issue: "plaster", keywords: ["paint","wall","crack","peel","stain","mold","damp","plaster","ceiling","patch"], en: { title: "Wall/Paint Damage Detected", desc: "I can see wall damage — this could be cracking, peeling paint, or plaster issues. A painter or plasterer can assess the damage and restore the surface." }, he: { title: "\u05e0\u05d6\u05e7 \u05d1\u05e7\u05d9\u05e8 / \u05e6\u05d1\u05e2 \u05d6\u05d5\u05d4\u05d4", desc: "\u05d0\u05e0\u05d9 \u05e8\u05d5\u05d0\u05d4 \u05e0\u05d6\u05e7 \u05d1\u05e7\u05d9\u05e8 \u2014 \u05d9\u05d9\u05ea\u05db\u05df \u05e9\u05d6\u05d4 \u05e1\u05d3\u05e7, \u05e7\u05d9\u05dc\u05d5\u05e3 \u05e6\u05d1\u05e2, \u05d0\u05d5 \u05d1\u05e2\u05d9\u05d4 \u05d1\u05d8\u05d9\u05d7. \u05e6\u05d1\u05e2\u05d9 \u05d0\u05d5 \u05d8\u05d9\u05d9\u05d7 \u05d9\u05db\u05d5\u05dc \u05dc\u05d4\u05e2\u05e8\u05d9\u05da \u05d5\u05dc\u05e9\u05e7\u05dd." } },
-  { cat: "locksmith", issue: "lock_replace", keywords: ["lock","door","key","stuck","broken","handle","latch","deadbolt","entry"], en: { title: "Lock/Door Issue Detected", desc: "This looks like a lock or door mechanism problem. A locksmith can repair or replace the lock and ensure your home is secure." }, he: { title: "\u05ea\u05e7\u05dc\u05d4 \u05d1\u05de\u05e0\u05e2\u05d5\u05dc / \u05d3\u05dc\u05ea \u05d6\u05d5\u05d4\u05ea\u05d4", desc: "\u05d6\u05d4 \u05e0\u05e8\u05d0\u05d4 \u05db\u05ea\u05e7\u05dc\u05d4 \u05d1\u05de\u05e0\u05e2\u05d5\u05dc \u05d0\u05d5 \u05d1\u05de\u05e0\u05d2\u05e0\u05d5\u05df \u05d4\u05d3\u05dc\u05ea. \u05de\u05e0\u05e2\u05d5\u05dc\u05df \u05d9\u05db\u05d5\u05dc \u05dc\u05ea\u05e7\u05df \u05d0\u05d5 \u05dc\u05d4\u05d7\u05dc\u05d9\u05e3 \u05d0\u05ea \u05d4\u05de\u05e0\u05e2\u05d5\u05dc." } },
-  { cat: "renovation", issue: "tiling", keywords: ["tile","floor","broken tile","grout","ceramic","marble","renovation"], en: { title: "Floor/Tile Damage Detected", desc: "I can see damaged flooring or tiles. This may require tile replacement or grouting work. A renovation professional can handle this repair." }, he: { title: "\u05e0\u05d6\u05e7 \u05d1\u05e8\u05e6\u05e4\u05d4 / \u05d0\u05e8\u05d9\u05d7\u05d9\u05dd \u05d6\u05d5\u05d4\u05d4", desc: "\u05d0\u05e0\u05d9 \u05e8\u05d5\u05d0\u05d4 \u05e0\u05d6\u05e7 \u05d1\u05e8\u05e6\u05e4\u05d4 \u05d0\u05d5 \u05d1\u05d0\u05e8\u05d9\u05d7\u05d9\u05dd. \u05d9\u05d9\u05ea\u05db\u05df \u05e9\u05e6\u05e8\u05d9\u05da \u05d4\u05d7\u05dc\u05e4\u05ea \u05d0\u05e8\u05d9\u05d7\u05d9\u05dd \u05d0\u05d5 \u05ea\u05d9\u05e7\u05d5\u05df \u05e8\u05d5\u05d1\u05d4. \u05d0\u05d9\u05e9 \u05e9\u05d9\u05e4\u05d5\u05e6\u05d9\u05dd \u05d9\u05db\u05d5\u05dc \u05dc\u05d8\u05e4\u05dc \u05d1\u05d6\u05d4." } },
-  { cat: "carpentry", issue: "furniture", keywords: ["wood","furniture","cabinet","shelf","drawer","closet","hinge","board"], en: { title: "Furniture/Carpentry Issue Detected", desc: "This appears to be a carpentry or furniture issue. Whether it's a broken cabinet, shelf, or door — a skilled carpenter can fix or build what you need." }, he: { title: "\u05ea\u05e7\u05dc\u05d4 \u05d1\u05e8\u05d4\u05d9\u05d8 / \u05e0\u05d2\u05e8\u05d5\u05ea \u05d6\u05d5\u05d4\u05ea\u05d4", desc: "\u05d6\u05d4 \u05e0\u05e8\u05d0\u05d4 \u05db\u05ea\u05e7\u05dc\u05d4 \u05d1\u05e0\u05d2\u05e8\u05d5\u05ea \u05d0\u05d5 \u05e8\u05d4\u05d9\u05d8. \u05d1\u05d9\u05df \u05d0\u05dd \u05d6\u05d4 \u05d0\u05e8\u05d5\u05df \u05e9\u05d1\u05d5\u05e8, \u05de\u05d3\u05e3, \u05d0\u05d5 \u05d3\u05dc\u05ea \u2014 \u05e0\u05d2\u05e8 \u05de\u05e7\u05e6\u05d5\u05e2\u05d9 \u05d9\u05db\u05d5\u05dc \u05dc\u05ea\u05e7\u05df \u05d0\u05d5 \u05dc\u05d1\u05e0\u05d5\u05ea." } },
-];
-
-/* Default fallback diagnosis */
-const DEFAULT_DIAG = { cat: "plumbing", issue: "general_plumb",
-  en: { title: "Issue Identified", desc: "Based on my analysis, this appears to be a home maintenance issue. I recommend booking a professional to inspect and provide a proper assessment." },
-  he: { title: "\u05ea\u05e7\u05dc\u05d4 \u05d6\u05d5\u05d4\u05ea\u05d4", desc: "\u05e2\u05dc \u05e1\u05de\u05da \u05d4\u05e0\u05d9\u05ea\u05d5\u05d7 \u05e9\u05dc\u05d9, \u05d6\u05d5 \u05e0\u05e8\u05d0\u05d9\u05ea \u05ea\u05e7\u05dc\u05d4 \u05d1\u05ea\u05d7\u05d6\u05d5\u05e7\u05ea \u05d4\u05d1\u05d9\u05ea. \u05de\u05d5\u05de\u05dc\u05e5 \u05dc\u05d4\u05d6\u05de\u05d9\u05df \u05d1\u05e2\u05dc \u05de\u05e7\u05e6\u05d5\u05e2 \u05dc\u05d1\u05d3\u05d9\u05e7\u05d4 \u05d5\u05d4\u05e2\u05e8\u05db\u05d4." } };
-
-function getDiagnosis() {
-  const rnd = Math.random();
-  if (rnd < 0.25) return DIAGNOSIS_MAP[0]; // leak
-  if (rnd < 0.40) return DIAGNOSIS_MAP[2]; // electrical
-  if (rnd < 0.55) return DIAGNOSIS_MAP[3]; // ac
-  if (rnd < 0.65) return DIAGNOSIS_MAP[1]; // clog
-  if (rnd < 0.75) return DIAGNOSIS_MAP[4]; // paint
-  if (rnd < 0.85) return DIAGNOSIS_MAP[5]; // lock
-  if (rnd < 0.92) return DIAGNOSIS_MAP[6]; // tile
-  return DIAGNOSIS_MAP[7]; // carpentry
-}
-
-function getDiagnosisFromText(text) {
-  const lower = text.toLowerCase();
-  for (const d of DIAGNOSIS_MAP) {
-    if (d.keywords.some(k => lower.includes(k))) return d;
-  }
-  // Hebrew keywords
-  const heMap = [
-    { idx: 0, words: ["\u05e0\u05d6\u05d9\u05dc\u05d4","\u05de\u05d9\u05dd","\u05d3\u05dc\u05d9\u05e4\u05d4","\u05e8\u05d8\u05d9\u05d1\u05d5\u05ea","\u05e6\u05e0\u05e8\u05ea","\u05d1\u05e8\u05d6"] },
-    { idx: 1, words: ["\u05e1\u05ea\u05d9\u05de\u05d4","\u05e1\u05ea\u05d5\u05dd","\u05e0\u05d9\u05e7\u05d5\u05d6","\u05d0\u05e1\u05dc\u05d4","\u05e9\u05d9\u05e8\u05d5\u05ea\u05d9\u05dd"] },
-    { idx: 2, words: ["\u05d7\u05e9\u05de\u05dc","\u05e9\u05e7\u05e2","\u05e7\u05e6\u05e8","\u05d7\u05d5\u05d8","\u05de\u05ea\u05d2","\u05e0\u05ea\u05d9\u05da"] },
-    { idx: 3, words: ["\u05de\u05d6\u05d2\u05df","\u05e7\u05e8\u05d9\u05e8","\u05d7\u05dd","\u05de\u05e4\u05d5\u05d7\u05d4","\u05de\u05e7\u05e8\u05e8"] },
-    { idx: 4, words: ["\u05e6\u05d1\u05e2","\u05e7\u05d9\u05e8","\u05e1\u05d3\u05e7","\u05e7\u05d9\u05dc\u05d5\u05e3","\u05e2\u05d5\u05d1\u05e9","\u05d8\u05d9\u05d7"] },
-    { idx: 5, words: ["\u05de\u05e0\u05e2\u05d5\u05dc","\u05d3\u05dc\u05ea","\u05de\u05e4\u05ea\u05d7","\u05ea\u05e7\u05d5\u05e2"] },
-    { idx: 6, words: ["\u05e8\u05e6\u05e4\u05d4","\u05d0\u05e8\u05d9\u05d7","\u05e7\u05e8\u05de\u05d9\u05e7\u05d4","\u05e9\u05d9\u05e4\u05d5\u05e5"] },
-    { idx: 7, words: ["\u05e2\u05e5","\u05e8\u05d4\u05d9\u05d8","\u05d0\u05e8\u05d5\u05df","\u05de\u05d3\u05e3","\u05de\u05d2\u05d9\u05e8\u05d4"] },
-  ];
-  for (const h of heMap) {
-    if (h.words.some(w => lower.includes(w))) return DIAGNOSIS_MAP[h.idx];
-  }
-  return null;
-}
-
-
-const TIME_OPTIONS = [
-  { value:"08:00", label:"08:00 AM" },{ value:"08:30", label:"08:30 AM" },{ value:"09:00", label:"09:00 AM" },{ value:"09:30", label:"09:30 AM" },{ value:"10:00", label:"10:00 AM" },{ value:"10:30", label:"10:30 AM" },{ value:"11:00", label:"11:00 AM" },{ value:"11:30", label:"11:30 AM" },
-  { value:"12:00", label:"12:00 PM" },{ value:"12:30", label:"12:30 PM" },{ value:"13:00", label:"1:00 PM" },{ value:"13:30", label:"1:30 PM" },{ value:"14:00", label:"2:00 PM" },{ value:"14:30", label:"2:30 PM" },{ value:"15:00", label:"3:00 PM" },{ value:"15:30", label:"3:30 PM" },
-  { value:"16:00", label:"4:00 PM" },{ value:"16:30", label:"4:30 PM" },{ value:"17:00", label:"5:00 PM" },{ value:"17:30", label:"5:30 PM" },{ value:"18:00", label:"6:00 PM" },{ value:"18:30", label:"6:30 PM" },{ value:"19:00", label:"7:00 PM" },{ value:"19:30", label:"7:30 PM" },{ value:"20:00", label:"8:00 PM" },
-];
-
-const fN = ["Yossi","Avi","Mohammad","Daniel","Shimon","Omar","Ron","Alex","Nir","Fadi","Amit","Boris","Tal","Sami","Yigal","Maria","Nadia","Eran","Kobi","Ran","Dov","Faris","Meir","Victor","Ilan"];
-const lN = ["Cohen","Levy","Hassan","Barak","Dahan","Said","Mizrachi","Petrov","Avraham","Nasser","Shalom","Kozlov","Regev","Halabi","Tzur","Ivanova","Kamal","Shapira","Azulay","Dror","Stern","Daher","Peretz","Rosen","Mor"];
-const fN_he = ["\u05d9\u05d5\u05e1\u05d9","\u05d0\u05d1\u05d9","\u05de\u05d5\u05d7\u05de\u05d3","\u05d3\u05e0\u05d9\u05d0\u05dc","\u05e9\u05de\u05e2\u05d5\u05df","\u05e2\u05d5\u05de\u05e8","\u05e8\u05d5\u05df","\u05d0\u05dc\u05db\u05e1","\u05e0\u05d9\u05e8","\u05e4\u05d0\u05d3\u05d9","\u05e2\u05de\u05d9\u05ea","\u05d1\u05d5\u05e8\u05d9\u05e1","\u05d8\u05dc","\u05e1\u05de\u05d9","\u05d9\u05d2\u05d0\u05dc","\u05de\u05e8\u05d9\u05d4","\u05e0\u05d0\u05d3\u05d9\u05d4","\u05e2\u05e8\u05df","\u05e7\u05d5\u05d1\u05d9","\u05e8\u05df","\u05d3\u05d1","\u05e4\u05d0\u05e8\u05e1","\u05de\u05d0\u05d9\u05e8","\u05d5\u05d9\u05e7\u05d8\u05d5\u05e8","\u05d0\u05d9\u05dc\u05df"];
-const lN_he = ["\u05db\u05d4\u05df","\u05dc\u05d5\u05d9","\u05d7\u05e1\u05df","\u05d1\u05e8\u05e7","\u05d3\u05d4\u05df","\u05e1\u05e2\u05d9\u05d3","\u05de\u05d6\u05e8\u05d7\u05d9","\u05e4\u05d8\u05e8\u05d5\u05d1","\u05d0\u05d1\u05e8\u05d4\u05dd","\u05e0\u05d0\u05e1\u05e8","\u05e9\u05dc\u05d5\u05dd","\u05e7\u05d5\u05d6\u05dc\u05d5\u05d1","\u05e8\u05d2\u05d1","\u05d7\u05dc\u05d1\u05d9","\u05e6\u05d5\u05e8","\u05d0\u05d9\u05d1\u05e0\u05d5\u05d1\u05d4","\u05db\u05de\u05d0\u05dc","\u05e9\u05e4\u05d9\u05e8\u05d0","\u05d0\u05d6\u05d5\u05dc\u05d0\u05d9","\u05d3\u05e8\u05d5\u05e8","\u05e9\u05d8\u05e8\u05df","\u05d3\u05d0\u05d4\u05e8","\u05e4\u05e8\u05e5","\u05e8\u05d5\u05d6\u05df","\u05de\u05d5\u05e8"];
-
-function genPros(city, catId) {
-  var curLang = "en"; try { curLang = localStorage.getItem("fixmate_lang") || "en"; } catch(e) {}
-  var first = curLang === "he" ? fN_he : fN;
-  var last = curLang === "he" ? lN_he : lN;
-  const s = (city + catId).split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-  return Array.from({ length: (s % 4) + 1 }, (_, i) => {
-    const fi = (s + i * 7) % first.length, li = (s + i * 13) % last.length;
-    return {
-      id: s * 100 + i, name: first[fi] + " " + last[li],
-      rating: (4.4 + (((s + i) % 6) * 0.1)).toFixed(1),
-      reviews: 30 + ((s + i * 17) % 250), city,
-      price: `${100 + ((s + i) % 15) * 20}-${200 + ((s + i) % 15) * 30}`,
-      avatar: first[fi][0] + last[li][0],
-      expYears: 3 + ((s + i) % 18),
-      available: "confirmed",
-    };
-  });
-}
 
 const fld = (ok) => ({
   width: "100%", padding: "13px 16px", borderRadius: 14,
@@ -151,196 +31,21 @@ export default function BookaPro() {
   const isRTL = dir === "rtl";
   const isHe = lang === "he";
 
-  const [step, setStep] = useState(1);
-  const [cat, setCat] = useState(null);
-  const [issue, setIssue] = useState(null);
-
-  // Chat state
-  const [msgs, setMsgs] = useState([]);
-  const [chatInput, setChatInput] = useState("");
-  const [analyzing, setAnalyzing] = useState(false);
-  const [diagnosis, setDiagnosis] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const fileRef = useRef(null);
-  const chatEndRef = useRef(null);
-
-  // Step 2+3 state
-  const [cityQ, setCityQ] = useState("");
-  const [city, setCity] = useState(null);
-  const [dd, setDd] = useState(false);
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [results, setResults] = useState(false);
-  const [modal, setModal] = useState(null);
-  const [ok, setOk] = useState(false);
-  const [booking, setBooking] = useState(false);
-  const [bookErr, setBookErr] = useState("");
-  const [desc, setDesc] = useState("");
-  const iRef = useRef(null);
-  const dRef = useRef(null);
-
-  // אותה רשימת ערי ישראל כמו במסך ההרשמה — חיפוש בעברית ובאנגלית, הצגה לפי שפת הממשק
-  const filtered = (cityQ
-    ? ISRAEL_CITIES.filter(c => c.he.includes(cityQ.trim()) || c.en.toLowerCase().includes(cityQ.toLowerCase()))
-    : ISRAEL_CITIES
-  ).map(c => (isHe ? c.he : c.en));
-  const ready = city && date && time;
-  const today = new Date().toISOString().split("T")[0];
-
-  // Auto-scroll chat
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [msgs, analyzing]);
-
-  // Close city dropdown on outside click
-  useEffect(() => {
-    const h = (e) => {
-      if (dRef.current && !dRef.current.contains(e.target) && iRef.current && !iRef.current.contains(e.target))
-        setDd(false);
-    };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, []);
-
-  // Initial bot greeting
-  useEffect(() => {
-    const greeting = isHe
-      ? "\u05e9\u05dc\u05d5\u05dd! \ud83d\udc4b \u05d0\u05e0\u05d9 \u05d4\u05e2\u05d5\u05d6\u05e8 \u05d4\u05d7\u05db\u05dd \u05e9\u05dc FixMate. \u05e6\u05dc\u05dd \u05d0\u05ea \u05d4\u05ea\u05e7\u05dc\u05d4 \u05d0\u05d5 \u05ea\u05d0\u05e8 \u05d0\u05d5\u05ea\u05d4 \u2014 \u05d5\u05d0\u05e0\u05d9 \u05d0\u05d6\u05d4\u05d4 \u05d0\u05ea \u05e1\u05d5\u05d2 \u05d4\u05d1\u05e2\u05d9\u05d4 \u05d5\u05d0\u05de\u05e6\u05d0 \u05dc\u05da \u05d1\u05e2\u05dc \u05de\u05e7\u05e6\u05d5\u05e2."
-      : "Hi there! \ud83d\udc4b I'm FixMate's smart assistant. Snap a photo of the issue or describe it \u2014 and I'll identify the problem and find you the right professional.";
-    setMsgs([{ role: "bot", text: greeting }]);
-  }, [isHe]);
-
-  const catLabel = cat ? t(CAT_LABEL_KEYS[cat]) : "";
-  const issueLabel = issue ? t(`bp_iss_${issue}`) : "";
-  const timeLabel = TIME_OPTIONS.find(ti => ti.value === time)?.label || "";
-
-  /* בעלי מקצוע אמיתיים ומאושרים מהשרת */
-  const [pros, setPros] = useState([]);
-  const [prosLoading, setProsLoading] = useState(false);
-
-  useEffect(() => {
-    if (!results) return;
-    setProsLoading(true);
-    apiFetch("/api/client/pros")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((list) => {
-        const arr = Array.isArray(list) ? list : [];
-        setPros(arr.map((p) => {
-          const u = p.user || {};
-          const name = u.fullName || (isHe ? "בעל מקצוע" : "Professional");
-          const parts = name.trim().split(/\s+/);
-          const avatar = ((parts[0] || "?")[0] + (parts[1] ? parts[1][0] : "")).toUpperCase();
-          return {
-            id: p.id,
-            userId: (p.user && p.user.id) || null,   // מזהה ה-User (נדרש ליצירת הזמנה)
-            name,
-            specialty: p.specialty || "",
-            rating: p.totalRatings > 0 ? Number(p.averageRating).toFixed(1) : (isHe ? "חדש" : "New"),
-            reviews: p.totalRatings || 0,
-            city: p.location || "—",
-            price: p.hourlyRate != null ? String(p.hourlyRate) : "—",
-            avatar,
-            profilePicture: u.profilePicture || "",
-            expYears: p.yearsExperience != null ? p.yearsExperience : "—",
-            phone: u.phone || "",
-            available: "confirmed",
-          };
-        }));
-      })
-      .catch(() => setPros([]))
-      .finally(() => setProsLoading(false));
-  }, [results, isHe]);
-
-  /* מסננים לפי הקטגוריה שנבחרה — רק בעלי מקצוע שתחום ההתמחות שלהם תואם */
-  const visiblePros = cat
-    ? pros.filter((p) => {
-        const spec = (p.specialty || "").toLowerCase();
-        if (!spec) return false;
-        const keys = CAT_MATCH[cat] || [cat];
-        return keys.some((k) => spec.includes(k.toLowerCase()));
-      })
-    : pros;
-
-  /* יצירת הזמנה אמיתית בשרת */
-  const confirmBooking = async () => {
-    if (!modal) return;
-    if (!modal.userId) { setBookErr(isHe ? "לא ניתן להזמין בעל מקצוע זה" : "Cannot book this professional"); return; }
-    setBooking(true);
-    setBookErr("");
-    try {
-      const r = await apiFetch("/api/client/bookings", {
-        method: "POST",
-        body: JSON.stringify({
-          proId: modal.userId,
-          serviceType: catLabel || modal.specialty || "",
-          scheduledAt: date + "T" + time + ":00",
-          address: city,
-          notes: desc || "",
-        }),
-      });
-      if (!r.ok) throw new Error("failed");
-      setModal(null);
-      setOk(true);
-      setTimeout(() => { setOk(false); navigate("/client/dashboard"); }, 2500);
-    } catch (e) {
-      setBookErr(isHe ? "יצירת ההזמנה נכשלה. נסו שוב." : "Failed to create booking. Please try again.");
-    } finally {
-      setBooking(false);
-    }
-  };
-  const fmtDate = (d) => d ? new Date(d + "T00:00:00").toLocaleDateString(isHe ? "he-IL" : "en-US", { weekday: "short", month: "short", day: "numeric" }) : "";
-
-  const goBack = () => {
-    if (step === 2 && results) setResults(false);
-    else if (step === 2) { setStep(1); }
-    else navigate("/client/dashboard");
-  };
-
-  const handlePhoto = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const url = ev.target.result;
-      setImagePreview(url);
-      setMsgs(prev => [...prev, { role: "user", image: url }]);
-      runAnalysis(null);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleTextSend = () => {
-    const txt = chatInput.trim();
-    if (!txt) return;
-    setMsgs(prev => [...prev, { role: "user", text: txt }]);
-    setChatInput("");
-    const textDiag = getDiagnosisFromText(txt);
-    runAnalysis(textDiag);
-  };
-
-  const runAnalysis = (textDiag) => {
-    setAnalyzing(true);
-    const delay = 1500 + Math.random() * 1500;
-    setTimeout(() => {
-      const diag = textDiag || getDiagnosis();
-      setDiagnosis(diag);
-      setCat(diag.cat);
-      setIssue(diag.issue);
-      const langData = isHe ? diag.he : diag.en;
-      const botMsg = `**${langData.title}** ${catIcons[diag.cat]}\n\n${langData.desc}`;
-      setMsgs(prev => [...prev, { role: "bot", text: botMsg }]);
-      setAnalyzing(false);
-    }, delay);
-  };
-
-  const confirmDiagnosis = () => {
-    setStep(2);
-    setCity(null);
-    setCityQ("");
-    setDate("");
-    setTime("");
-    setResults(false);
-  };
+  /* כל הלוגיקה מגיעה מ-hooks/useBooking.js */
+  const {
+    step, setStep,
+    cat, issue, catLabel, issueLabel, timeLabel,
+    msgs, chatInput, setChatInput, analyzing, diagnosis, imagePreview,
+    fileRef, chatEndRef, handlePhoto, handleTextSend, confirmDiagnosis,
+    cityQ, setCityQ, city, setCity, dd, setDd,
+    date, setDate, time, setTime,
+    filtered, ready, today, fmtDate,
+    iRef, dRef,
+    results, setResults, visiblePros, prosLoading,
+    modal, setModal, ok, booking, bookErr,
+    desc, setDesc, confirmBooking,
+    goBack,
+  } = useBooking({ t, lang, isHe, navigate });
 
   const BackIcon = isRTL ? IconForward : IconBack;
 
