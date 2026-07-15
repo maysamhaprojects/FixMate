@@ -19,7 +19,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getLang, getDir } from "../context/LanguageContext";
 import { apiFetch } from "../services/api";
-import { IcoGrid, IcoUsers, IcoShield, IcoAlert, IcoClip, IcoDollar, IcoCheck, IcoX, IcoEye, IcoBan, IcoSearch, IcoTrend, IcoLogout, IcoWrench, IcoChevR, IcoBack, IcoStar, IcoStarNav, IcoMail, IcoPhone, IcoRefresh, ActUser, ActWrench, ActAlert, ActCheck, ActDollar } from "../components/AdminIcons";
+import { IcoGrid, IcoUsers, IcoShield, IcoAlert, IcoClip, IcoDollar, IcoCheck, IcoX, IcoEye, IcoBan, IcoSearch, IcoLogout, IcoWrench, IcoChevR, IcoBack, IcoStar, IcoStarNav, IcoMail, IcoPhone, IcoRefresh } from "../components/AdminIcons";
 import AdminModals from "../components/admin/AdminModals";
 
 const useL = () => {
@@ -29,53 +29,6 @@ const useL = () => {
 };
 
 /* אייקונים מיובאים מ-components/AdminIcons.jsx */
-
-/* ─── Mock Data ─── */
-const STATS = {
-  totalUsers: 1284, totalPros: 318, totalOrders: 4720,
-  monthRevenue: 128400, openComplaints: 7, pendingApprovals: 4,
-  ordersToday: 38, growth: 12,
-};
-
-const PENDING_PROS = [
-  { id: "p1", name: "Yossi Azulay",  nameHe: "יוסי אזולאי",  trade: "Electrician",   tradeHe: "חשמלאי",        city: "Tel Aviv",   cityHe: "תל אביב",  phone: "+972-52-100-1111", email: "yossi@email.com", exp: "8 years",  expHe: "8 שנים",  joined: "Mar 10, 2026", docs: 3, avatar: "Y" },
-  { id: "p2", name: "Kobi Mansour",  nameHe: "קובי מנסור",    trade: "Plumber",       tradeHe: "אינסטלטור",     city: "Haifa",      cityHe: "חיפה",      phone: "+972-54-200-2222", email: "kobi@email.com",  exp: "5 years",  expHe: "5 שנים",  joined: "Mar 11, 2026", docs: 2, avatar: "K" },
-  { id: "p3", name: "Sami Barakat",  nameHe: "סאמי ברכאת",    trade: "AC Tech",       tradeHe: "מיזוג אוויר",   city: "Ramla",      cityHe: "רמלה",      phone: "+972-50-300-3333", email: "sami@email.com",  exp: "12 years", expHe: "12 שנים", joined: "Mar 12, 2026", docs: 4, avatar: "S" },
-  { id: "p4", name: "Avi Cohen",     nameHe: "אבי כהן",        trade: "Handyman",      tradeHe: "כל-בו",         city: "Beer Sheva", cityHe: "באר שבע",   phone: "+972-53-400-4444", email: "avi@email.com",   exp: "3 years",  expHe: "3 שנים",  joined: "Mar 13, 2026", docs: 2, avatar: "A" },
-];
-
-const COMPLAINTS = [
-  { id: "c1", from: "Sarah Cohen",   fromHe: "שרה כהן",      role: "Client", roleHe: "לקוח",      subject: "Pro didn't show up",          subjectHe: "בעל המקצוע לא הגיע",       status: "open",     priority: "high",   date: "Mar 12, 2026", orderId: "ORD-2050", assignedTo: null       },
-  { id: "c2", from: "David Mizrahi", fromHe: "דוד מזרחי",    role: "Pro",    roleHe: "בעל מקצוע", subject: "Client cancelled last minute", subjectHe: "לקוח ביטל ברגע האחרון",    status: "open",     priority: "medium", date: "Mar 11, 2026", orderId: "ORD-2048", assignedTo: null       },
-  { id: "c3", from: "Noa Katz",      fromHe: "נועה כץ",      role: "Client", roleHe: "לקוח",      subject: "Overcharged for service",      subjectHe: "חיוב יתר על השירות",        status: "open",     priority: "high",   date: "Mar 10, 2026", orderId: "ORD-2043", assignedTo: "Admin 1" },
-  { id: "c4", from: "Moshe Peretz",  fromHe: "משה פרץ",      role: "Pro",    roleHe: "בעל מקצוע", subject: "Payment not received",         subjectHe: "תשלום לא התקבל",            status: "resolved", priority: "low",    date: "Mar 8, 2026",  orderId: "ORD-2041", assignedTo: "Admin 2" },
-  { id: "c5", from: "Rina Goldberg", fromHe: "רינה גולדברג",  role: "Client", roleHe: "לקוח",      subject: "Poor quality of work",         subjectHe: "איכות עבודה ירודה",         status: "resolved", priority: "medium", date: "Mar 7, 2026",  orderId: "ORD-2039", assignedTo: "Admin 1" },
-];
-
-const USERS = [
-  { id: "u1", name: "Sarah Cohen",   nameHe: "שרה כהן",     role: "client", roleHe: "לקוח",      email: "sarah@email.com", city: "Tel Aviv",  cityHe: "תל אביב", orders: 8,   joined: "Jan 5, 2026",  status: "active",    avatar: "S", rating: null },
-  { id: "u2", name: "Moshe Peretz",  nameHe: "משה פרץ",     role: "client", roleHe: "לקוח",      email: "moshe@email.com", city: "Ramat Gan", cityHe: "רמת גן",  orders: 3,   joined: "Feb 1, 2026",  status: "active",    avatar: "M", rating: null },
-  { id: "u3", name: "David Mizrahi", nameHe: "דוד מזרחי",   role: "pro",    roleHe: "בעל מקצוע", email: "david@email.com", city: "Tel Aviv",  cityHe: "תל אביב", orders: 142, joined: "Nov 3, 2025",  status: "active",    avatar: "D", rating: 4.8  },
-  { id: "u4", name: "Noa Katz",      nameHe: "נועה כץ",     role: "client", roleHe: "לקוח",      email: "noa@email.com",   city: "Herzliya",  cityHe: "הרצליה",  orders: 5,   joined: "Dec 12, 2025", status: "suspended", avatar: "N", rating: null },
-  { id: "u5", name: "Rina Goldberg", nameHe: "רינה גולדברג", role: "client", roleHe: "לקוח",      email: "rina@email.com",  city: "Tel Aviv",  cityHe: "תל אביב", orders: 11,  joined: "Oct 20, 2025", status: "active",    avatar: "R", rating: null },
-  { id: "u6", name: "Amit Levy",     nameHe: "עמית לוי",    role: "pro",    roleHe: "בעל מקצוע", email: "amit@email.com",  city: "Haifa",     cityHe: "חיפה",    orders: 89,  joined: "Sep 14, 2025", status: "active",    avatar: "A", rating: 4.5  },
-];
-
-const RECENT_ORDERS = [
-  { id: "ORD-2055", client: "Maya Shapira", clientHe: "מאיה שפירא", pro: "David Mizrahi", proHe: "דוד מזרחי",  service: "Electrical panel", serviceHe: "לוח חשמל",   price: 550, status: "in_progress", date: "Mar 13" },
-  { id: "ORD-2054", client: "Ran Biton",    clientHe: "רן ביטון",    pro: "Amit Levy",     proHe: "עמית לוי",   service: "Ceiling fan",      serviceHe: "מאוורר תקרה", price: 480, status: "pending",     date: "Mar 13" },
-  { id: "ORD-2053", client: "Hila Peretz",  clientHe: "הילה פרץ",   pro: "David Mizrahi", proHe: "דוד מזרחי",  service: "Fix outlet",       serviceHe: "תיקון שקע",   price: 320, status: "done",        date: "Mar 12" },
-  { id: "ORD-2052", client: "Tamar Levi",   clientHe: "תמר לוי",    pro: "Sami Bar",      proHe: "סאמי בר",    service: "AC install",       serviceHe: "התקנת מזגן",   price: 890, status: "done",        date: "Mar 12" },
-  { id: "ORD-2051", client: "Amit Levy",    clientHe: "עמית לוי",   pro: "Kobi Green",    proHe: "קובי גרין",  service: "Pipe fix",         serviceHe: "תיקון צינור",  price: 380, status: "cancelled",   date: "Mar 11" },
-];
-
-const ACTIVITY = [
-  { id: 1, Icon: ActUser,    color: "#3B82F6", bg: "#EFF6FF", text: { en: "New client Sarah Cohen registered",          he: "לקוח חדש שרה כהן נרשמה"              }, time: { en: "2 min ago",  he: "לפני 2 דקות"  } },
-  { id: 2, Icon: ActWrench,  color: "#F59E0B", bg: "#FFFBEB", text: { en: "Pro Yossi Azulay submitted approval request", he: "יוסי אזולאי הגיש בקשת אישור"         }, time: { en: "15 min ago", he: "לפני 15 דקות" } },
-  { id: 3, Icon: ActAlert,   color: "#EF4444", bg: "#FEF2F2", text: { en: "New complaint from Noa Katz (ORD-2043)",      he: "תלונה חדשה מנועה כץ (ORD-2043)"      }, time: { en: "1 hour ago", he: "לפני שעה"     } },
-  { id: 4, Icon: ActCheck,   color: "#10B981", bg: "#ECFDF5", text: { en: "Order ORD-2053 marked as completed",          he: "הזמנה ORD-2053 הושלמה"                }, time: { en: "2 hours ago",he: "לפני 2 שעות"  } },
-  { id: 5, Icon: ActDollar,  color: "#8B5CF6", bg: "#F5F3FF", text: { en: "Revenue milestone: ₪128,000 this month",      he: "אבן דרך הכנסה: ₪128,000 החודש"       }, time: { en: "Today",      he: "היום"          } },
-];
 
 /* ─── status helpers ─── */
 const ORDER_STATUS = {
