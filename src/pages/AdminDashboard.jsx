@@ -19,6 +19,8 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getLang, getDir } from "../context/LanguageContext";
 import { apiFetch } from "../services/api";
+import { IcoGrid, IcoUsers, IcoShield, IcoAlert, IcoClip, IcoDollar, IcoCheck, IcoX, IcoEye, IcoBan, IcoSearch, IcoTrend, IcoLogout, IcoWrench, IcoChevR, IcoBack, IcoStar, IcoStarNav, IcoMail, IcoPhone, IcoRefresh, ActUser, ActWrench, ActAlert, ActCheck, ActDollar } from "../components/AdminIcons";
+import AdminModals from "../components/admin/AdminModals";
 
 const useL = () => {
   const lang = getLang();
@@ -26,42 +28,7 @@ const useL = () => {
   return { isHe, L: (en, he) => (isHe ? he : en), dir: getDir() };
 };
 
-/* ─── Icons ─── */
-const Svg = ({ ch, s = 18, w = 2 }) => (
-  <svg width={s} height={s} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={w}
-    strokeLinecap="round" strokeLinejoin="round">
-    {ch}
-  </svg>
-);
-const IcoGrid   = () => <Svg ch={<><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></>}/>;
-const IcoUsers  = () => <Svg ch={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>}/>;
-const IcoShield = () => <Svg ch={<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>}/>;
-const IcoAlert  = () => <Svg ch={<><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>}/>;
-const IcoClip   = () => <Svg ch={<><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></>}/>;
-const IcoDollar = () => <Svg ch={<><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>}/>;
-const IcoCheck  = () => <Svg s={14} ch={<polyline points="20 6 9 17 4 12"/>}/>;
-const IcoX      = () => <Svg s={14} ch={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>}/>;
-const IcoEye    = () => <Svg s={14} ch={<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}/>;
-const IcoBan    = () => <Svg s={14} ch={<><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></>}/>;
-const IcoSearch = () => <Svg s={15} ch={<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>}/>;
-const IcoTrend  = () => <Svg s={14} ch={<><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>}/>;
-const IcoLogout = () => <Svg s={17} ch={<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>}/>;
-const IcoWrench = () => <Svg s={18} ch={<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>}/>;
-const IcoChevR  = () => <Svg s={14} ch={<polyline points="9 18 15 12 9 6"/>}/>;
-const IcoBack   = () => <Svg s={15} ch={<polyline points="15 18 9 12 15 6"/>}/>;
-const IcoStar   = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="#FBBF24" stroke="#FBBF24" strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
-const IcoStarNav = () => <Svg ch={<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>}/>;
-const IcoMail   = () => <Svg s={13} ch={<><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></>}/>;
-const IcoPhone  = () => <Svg s={13} ch={<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>}/>;
-const IcoRefresh= () => <Svg s={14} ch={<><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></>}/>;
-
-/* Activity SVG icons */
-const ActUser   = () => <Svg s={17} ch={<><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>}/>;
-const ActWrench = () => <Svg s={17} ch={<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>}/>;
-const ActAlert  = () => <Svg s={17} ch={<><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>}/>;
-const ActCheck  = () => <Svg s={17} w={2.5} ch={<polyline points="20 6 9 17 4 12"/>}/>;
-const ActDollar = () => <Svg s={17} ch={<><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>}/>;
+/* אייקונים מיובאים מ-components/AdminIcons.jsx */
 
 /* ─── Mock Data ─── */
 const STATS = {
@@ -877,211 +844,13 @@ export default function AdminDashboard() {
 
       {/* ════ MODALS ════ */}
 
-      {modal?.type === "approve_pro" && (
-        <Overlay onClose={() => setModal(null)}>
-          <div style={{ textAlign: "center", direction: dir }}>
-            <div style={{ fontSize: 50, marginBottom: 12 }}>🛡️</div>
-            <h3 style={{ fontFamily: "'Outfit'", fontSize: 19, fontWeight: 800, color: "#1A2B4A", marginBottom: 6 }}>{L("Approve this professional?", "לאשר בעל מקצוע זה?")}</h3>
-            <p style={{ fontSize: 14, color: "#64748B", marginBottom: 4 }}><strong>{isHe ? modal.data.nameHe : modal.data.name}</strong></p>
-            <p style={{ fontSize: 13, color: "#94A3B8", marginBottom: 24 }}>{isHe ? modal.data.tradeHe : modal.data.trade} · {isHe ? modal.data.cityHe : modal.data.city}</p>
-            <div style={{ display: "flex", gap: 10 }}>
-              <MBtn label={L("Cancel", "ביטול")} onClick={() => setModal(null)} />
-              <MBtn label={L("Yes, Approve ✓", "כן, אשר ✓")} onClick={() => approvePro(modal.data.id)} bg="#059669" glow="rgba(5,150,105,.28)" />
-            </div>
-          </div>
-        </Overlay>
-      )}
-
-      {modal?.type === "reject_pro" && (
-        <Overlay onClose={() => { setModal(null); setRejectReason(""); }}>
-          <div style={{ direction: dir }}>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 46, marginBottom: 10 }}>🚫</div>
-              <h3 style={{ fontFamily: "'Outfit'", fontSize: 19, fontWeight: 800, color: "#1A2B4A", marginBottom: 6 }}>{L("Reject this professional?", "לדחות בעל מקצוע זה?")}</h3>
-              <p style={{ fontSize: 14, color: "#64748B", marginBottom: 4 }}><strong>{isHe ? modal.data.nameHe : modal.data.name}</strong></p>
-              <p style={{ fontSize: 13, color: "#94A3B8", marginBottom: 16 }}>{isHe ? modal.data.tradeHe : modal.data.trade} · {isHe ? modal.data.cityHe : modal.data.city}</p>
-            </div>
-            <label style={{ fontSize: 13, fontWeight: 600, color: "#64748B", display: "block", marginBottom: 6 }}>
-              {L("Reason for rejection (required — the professional will see it)", "סיבת הדחייה (חובה — בעל המקצוע יראה אותה)")}
-            </label>
-            <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={3}
-              placeholder={isHe ? "לדוגמה: חסרים מסמכים / פרטים לא מלאים..." : "e.g. Missing documents / incomplete details..."}
-              style={{ width: "100%", border: "1.5px solid #E8ECF4", borderRadius: 12, padding: "10px 12px", fontSize: 14, fontFamily: "inherit", color: "#1A2B4A", outline: "none", resize: "vertical", boxSizing: "border-box", marginBottom: rejectReason.trim() ? 18 : 6, direction: dir }} />
-            {!rejectReason.trim() && (
-              <p style={{ fontSize: 12, color: "#DC2626", marginBottom: 14 }}>{isHe ? "יש לכתוב סיבה כדי לדחות" : "A reason is required to reject"}</p>
-            )}
-            <div style={{ display: "flex", gap: 10 }}>
-              <MBtn label={L("Cancel", "ביטול")} onClick={() => { setModal(null); setRejectReason(""); }} />
-              <button
-                onClick={() => rejectReason.trim() && rejectPro(modal.data.id, rejectReason)}
-                disabled={!rejectReason.trim()}
-                style={{ flex: 1, padding: "12px", borderRadius: 12, border: "none", fontFamily: "inherit", fontSize: 14, fontWeight: 700, color: "#FFF", cursor: rejectReason.trim() ? "pointer" : "not-allowed", background: rejectReason.trim() ? "#DC2626" : "#E2E8F0", boxShadow: rejectReason.trim() ? "0 6px 18px rgba(220,38,38,.28)" : "none" }}>
-                {L("Yes, Reject", "כן, דחה")}
-              </button>
-            </div>
-          </div>
-        </Overlay>
-      )}
-
-      {modal?.type === "view_pro" && (
-        <Overlay onClose={() => setModal(null)} wide>
-          <div style={{ direction: dir }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 22 }}>
-              <div style={{ width: 52, height: 52, borderRadius: 14, background: "linear-gradient(135deg,#FEF3C7,#FDE68A)", color: "#92400E", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Outfit'", fontWeight: 800, fontSize: 20 }}>
-                {modal.data.avatar}
-              </div>
-              <div>
-                <h3 style={{ fontFamily: "'Outfit'", fontSize: 20, fontWeight: 800, color: "#1A2B4A" }}>{isHe ? modal.data.nameHe : modal.data.name}</h3>
-                <p style={{ fontSize: 13, color: "#94A3B8" }}>{isHe ? modal.data.tradeHe : modal.data.trade} · {isHe ? modal.data.cityHe : modal.data.city}</p>
-              </div>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
-              {[
-                { label: L("Email", "אימייל"),        val: modal.data.email },
-                { label: L("Phone", "טלפון"),          val: modal.data.phone },
-                { label: L("Category", "קטגוריה"),     val: isHe ? modal.data.tradeHe : modal.data.trade },
-                { label: L("City", "עיר"),             val: isHe ? modal.data.cityHe : modal.data.city },
-                { label: L("Price / hr", "מחיר לשעה"), val: modal.data.hourlyRate != null ? "₪" + modal.data.hourlyRate : "—" },
-                { label: L("Experience", "ניסיון"),    val: isHe ? modal.data.expHe : modal.data.exp },
-              ].map(r => (
-                <div key={r.label} style={{ background: "#F8FAFF", borderRadius: 12, padding: "12px 16px" }}>
-                  <p style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600, marginBottom: 4 }}>{r.label}</p>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: "#1A2B4A" }}>{r.val}</p>
-                </div>
-              ))}
-            </div>
-            {modal.data.bio && (
-              <div style={{ background: "#F8FAFF", borderRadius: 12, padding: "12px 16px", marginBottom: 14 }}>
-                <p style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600, marginBottom: 4 }}>{L("About", "על עצמו")}</p>
-                <p style={{ fontSize: 13.5, color: "#374151", lineHeight: 1.6 }}>{modal.data.bio}</p>
-              </div>
-            )}
-            {/* מסמכים שהועלו — ניתן לצפייה */}
-            <div style={{ background: "#F8FAFF", borderRadius: 12, padding: "12px 16px", marginBottom: 22 }}>
-              <p style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600, marginBottom: 8 }}>{L("Documents", "מסמכים")} ({modal.data.docs})</p>
-              {modal.data.docFiles && modal.data.docFiles.length > 0 ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {modal.data.docFiles.map((d, i) => (
-                    <a key={i} href={d.data} target="_blank" rel="noreferrer" download={d.name}
-                      style={{ display: "flex", alignItems: "center", gap: 8, background: "#FFF", border: "1px solid #E8ECF4", borderRadius: 10, padding: "8px 12px", fontSize: 13, color: "#2563EB", textDecoration: "none", fontWeight: 600 }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
-                      <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</span>
-                      <span style={{ fontSize: 11, color: "#94A3B8" }}>{L("View", "צפה")}</span>
-                    </a>
-                  ))}
-                </div>
-              ) : (
-                <p style={{ fontSize: 13, color: "#94A3B8" }}>{L("No documents uploaded", "לא הועלו מסמכים")}</p>
-              )}
-            </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <MBtn label={L("Reject", "דחה")} onClick={() => { setModal({ type: "reject_pro", data: modal.data }); setRejectReason(""); }} bg="#DC2626" glow="rgba(220,38,38,.25)" />
-              <MBtn label={L("Approve ✓", "אשר ✓")} onClick={() => approvePro(modal.data.id)} bg="#059669" glow="rgba(5,150,105,.28)" />
-            </div>
-          </div>
-        </Overlay>
-      )}
-
-      {modal?.type === "view_complaint" && (
-        <Overlay onClose={() => setModal(null)} wide>
-          <div style={{ direction: dir }}>
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: "#FEF2F2", color: "#EF4444", display: "flex", alignItems: "center", justifyContent: "center" }}><IcoAlert /></div>
-                <div>
-                  <h3 style={{ fontFamily: "'Outfit'", fontSize: 18, fontWeight: 800, color: "#1A2B4A" }}>{isHe ? modal.data.subjectHe : modal.data.subject}</h3>
-                  <p style={{ fontSize: 12, color: "#94A3B8" }}>{modal.data.orderId} · {modal.data.date}</p>
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                {[
-                  { label: L("From", "מ"),         val: `${isHe ? modal.data.fromHe : modal.data.from} (${isHe ? modal.data.roleHe : modal.data.role})` },
-                  { label: L("Priority", "עדיפות"), val: modal.data.priority },
-                  { label: L("Status", "סטטוס"),    val: modal.data.status === "open" ? L("Open", "פתוח") : L("Resolved", "טופל") },
-                  { label: L("Assigned", "משוייך"),  val: modal.data.assignedTo || L("Unassigned", "לא משוייך") },
-                ].map(r => (
-                  <div key={r.label} style={{ background: "#F8FAFF", borderRadius: 12, padding: "12px 16px" }}>
-                    <p style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600, marginBottom: 4 }}>{r.label}</p>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "#1A2B4A" }}>{r.val}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* תיאור התלונה המלא */}
-              <div style={{ marginTop: 14, background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 12, padding: "12px 16px" }}>
-                <p style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600, marginBottom: 4 }}>{L("Complaint details", "פירוט התלונה")}</p>
-                <p style={{ fontSize: 13, color: "#1A2B4A", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{modal.data.description || "—"}</p>
-                {modal.data.email && <p style={{ fontSize: 12, color: "#64748B", marginTop: 8 }}>✉️ {modal.data.email}</p>}
-              </div>
-
-              {/* תגובת האדמין (תישלח במייל למתלונן) */}
-              <div style={{ marginTop: 14 }}>
-                <p style={{ fontSize: 12, fontWeight: 700, color: "#64748B", marginBottom: 6 }}>
-                  {L("Response to complainant (sent by email)", "תגובה למתלונן (תישלח במייל)")}
-                </p>
-                <textarea value={compResponse} onChange={(e) => setCompResponse(e.target.value)} rows={3}
-                  disabled={modal.data.status !== "open"}
-                  placeholder={L("Write a reply to the user...", "כתוב תגובה למשתמש...")}
-                  style={{ width: "100%", border: "1.5px solid #E2E8F0", borderRadius: 12, padding: "10px 12px", fontSize: 13, fontFamily: "inherit", color: "#1A2B4A", outline: "none", resize: "vertical", boxSizing: "border-box", background: modal.data.status !== "open" ? "#F8FAFF" : "#FFF" }} />
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <MBtn label={L("Close", "סגור")} onClick={() => setModal(null)} />
-              {modal.data.status === "open" && (
-                <MBtn label={L("Mark Resolved ✓", "סמן כטופל ✓")} onClick={() => resolveComp(modal.data.id, compResponse)} bg="#059669" glow="rgba(5,150,105,.28)" />
-              )}
-            </div>
-          </div>
-        </Overlay>
-      )}
-
-      {modal?.type === "view_user" && (
-        <Overlay onClose={() => setModal(null)} wide>
-          <div style={{ direction: dir }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
-              <div style={{ width: 52, height: 52, borderRadius: 14, background: modal.data.role === "pro" ? "linear-gradient(135deg,#EDE9FE,#DDD6FE)" : "linear-gradient(135deg,#DBEAFE,#BFDBFE)", color: modal.data.role === "pro" ? "#5B21B6" : "#1E40AF", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 20 }}>
-                {modal.data.avatar}
-              </div>
-              <div>
-                <h3 style={{ fontFamily: "'Outfit'", fontSize: 19, fontWeight: 800, color: "#1A2B4A" }}>{isHe ? modal.data.nameHe : modal.data.name}</h3>
-                <p style={{ fontSize: 13, color: "#94A3B8" }}>{isHe ? modal.data.roleHe : modal.data.role} · {modal.data.email}</p>
-              </div>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
-              {[
-                { label: L("City", "עיר"),       val: isHe ? modal.data.cityHe : modal.data.city },
-                { label: L("Orders", "הזמנות"),  val: modal.data.orders },
-                { label: L("Member since", "מ"), val: modal.data.joined },
-                { label: L("Status", "סטטוס"),   val: modal.data.status === "active" ? L("Active", "פעיל") : L("Suspended", "מושעה") },
-                ...(modal.data.rating ? [{ label: L("Rating", "דירוג"), val: `⭐ ${modal.data.rating}` }] : []),
-              ].map(r => (
-                <div key={r.label} style={{ background: "#F8FAFF", borderRadius: 12, padding: "12px 16px" }}>
-                  <p style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600, marginBottom: 4 }}>{r.label}</p>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: "#1A2B4A" }}>{r.val}</p>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <MBtn label={L("Close", "סגור")} onClick={() => setModal(null)} />
-              <MBtn
-                label={modal.data.status === "active" ? L("Suspend User", "השעה") : L("Restore User", "שחזר")}
-                onClick={() => toggleUser(modal.data.id)}
-                bg={modal.data.status === "active" ? "#EF4444" : "#059669"}
-                glow={modal.data.status === "active" ? "rgba(239,68,68,.28)" : "rgba(5,150,105,.28)"}
-              />
-            </div>
-          </div>
-        </Overlay>
-      )}
-
-      {/* Toast */}
-      {toast && (
-        <div style={{ position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)", zIndex: 600, animation: "toastIn .25s", pointerEvents: "none" }}>
-          <div style={{ padding: "12px 24px", borderRadius: 22, background: toast.type === "warning" ? "#FEF3C7" : toast.type === "info" ? "#EFF6FF" : "#0F172A", color: toast.type === "warning" ? "#92400E" : toast.type === "info" ? "#1D4ED8" : "#FFF", fontSize: 14, fontWeight: 600, boxShadow: "0 8px 30px rgba(0,0,0,.18)", whiteSpace: "nowrap", fontFamily: "inherit" }}>
-            {toast.msg}
-          </div>
-        </div>
-      )}
+      {/* מודלים + Toast — חולצו ל-components/admin/AdminModals.jsx */}
+      <AdminModals
+        modal={modal} setModal={setModal} L={L} isHe={isHe} dir={dir}
+        rejectReason={rejectReason} setRejectReason={setRejectReason}
+        compResponse={compResponse} setCompResponse={setCompResponse}
+        approvePro={approvePro} rejectPro={rejectPro} resolveComp={resolveComp} toggleUser={toggleUser}
+        toast={toast} />
     </div>
   );
 }
@@ -1109,21 +878,4 @@ function EmptyState({ emoji, title, sub }) {
   );
 }
 
-function Overlay({ children, onClose, wide }) {
-  return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", backdropFilter: "blur(5px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 400, padding: 20 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "#FFF", borderRadius: 24, padding: "30px", maxWidth: wide ? 520 : 400, width: "100%", animation: "popIn .22s", boxShadow: "0 24px 60px rgba(0,0,0,.2)" }}>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function MBtn({ label, onClick, bg, glow }) {
-  return (
-    <button onClick={onClick}
-      style={{ flex: 1, padding: "13px", borderRadius: 14, border: bg ? "none" : "1.5px solid #E2E8F0", background: bg || "#FFF", color: bg ? "#FFF" : "#64748B", fontSize: 14, fontWeight: bg ? 700 : 600, cursor: "pointer", fontFamily: "inherit", boxShadow: glow ? `0 6px 18px ${glow}` : "none", transition: "all .16s" }}>
-      {label}
-    </button>
-  );
-}
+/* Overlay ו-MBtn עברו ל-components/admin/AdminModals.jsx */
