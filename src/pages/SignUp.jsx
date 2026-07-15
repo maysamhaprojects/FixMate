@@ -39,121 +39,13 @@ import { useLang } from "../context/LanguageContext";
 import { COUNTRIES } from "../data/countries";
 import { ISRAEL_CITIES } from "../data/israelCities";
 import { apiFetch } from "../services/api";
+import { IconUser, IconMail, IconLock, IconPhone, IconMapPin, IconDollar, IconEye, IconEyeOff, IconWrench, IconHome, IconArrowLeft, IconArrowRight, IconSpinner, IconCheckCircle } from "../components/AuthIcons";
 
 /* ─────────────────────────────────────────────
    SVG Icon Components
    ───────────────────────────────────────────── */
 
 /** User icon — full name input */
-const IconUser = () => (
-  <svg className="auth-input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-    <circle cx="12" cy="7" r="4" />
-  </svg>
-);
-
-/** Envelope icon — email input */
-const IconMail = () => (
-  <svg className="auth-input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="4" width="20" height="16" rx="3" />
-    <path d="M22 7l-10 6L2 7" />
-  </svg>
-);
-
-/** Lock icon — password input */
-const IconLock = () => (
-  <svg className="auth-input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="11" width="18" height="11" rx="3" />
-    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-  </svg>
-);
-
-/** Phone icon — phone number input */
-const IconPhone = () => (
-  <svg className="auth-input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-  </svg>
-);
-
-/** Map pin icon — address/location input */
-const IconMapPin = () => (
-  <svg className="auth-input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-    <circle cx="12" cy="10" r="3" />
-  </svg>
-);
-
-/** Dollar icon — price range input */
-const IconDollar = () => (
-  <svg className="auth-input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="12" y1="1" x2="12" y2="23" />
-    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-  </svg>
-);
-
-/** Eye icon — show password */
-const IconEye = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-);
-
-/** Eye-off icon — hide password */
-const IconEyeOff = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-    <line x1="1" y1="1" x2="23" y2="23" />
-    <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
-  </svg>
-);
-
-/** Wrench icon — Professional role card */
-const IconWrench = () => (
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-  </svg>
-);
-
-/** House icon — Client role card */
-const IconHome = () => (
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 0 0 1 1h3m10-11l2 2m-2-2v10a1 1 0 0 1-1 1h-3m-4 0a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1" />
-  </svg>
-);
-
-/** Arrow-left icon — back button */
-const IconArrowLeft = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="19" y1="12" x2="5" y2="12" />
-    <polyline points="12 19 5 12 12 5" />
-  </svg>
-);
-
-/** Arrow-right icon — next step button */
-const IconArrowRight = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="5" y1="12" x2="19" y2="12" />
-    <polyline points="12 5 19 12 12 19" />
-  </svg>
-);
-
-/** Spinner icon — loading state on submit */
-const IconSpinner = () => (
-  <svg className="auth-spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-    <path d="M12 2a10 10 0 0 1 10 10" />
-  </svg>
-);
-
-/** Check-circle icon — success state */
-const IconCheckCircle = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4F6AFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <polyline points="9 12 11.5 14.5 16 9.5" />
-  </svg>
-);
-
 
 /* ─────────────────────────────────────────────
    Available service categories for Professionals
@@ -652,7 +544,7 @@ export default function SignUp() {
                   className={`signup-role-option ${role === "client" ? "signup-role-option--active" : ""}`}
                   onClick={() => { setRole("client"); if (errors.role) setErrors({}); }}
                 >
-                  <div className="signup-role-icon"><IconHome /></div>
+                  <div className="signup-role-icon"><IconHome size={36} /></div>
                   <h3 className="signup-role-title">{isHe ? "\u05dc\u05e7\u05d5\u05d7" : "Client"}</h3>
                   <p className="signup-role-desc">{isHe ? "\u05d0\u05e0\u05d9 \u05e6\u05e8\u05d9\u05da \u05dc\u05de\u05e6\u05d5\u05d0 \u05d5\u05dc\u05d4\u05d6\u05de\u05d9\u05df \u05d1\u05e2\u05dc\u05d9 \u05de\u05e7\u05e6\u05d5\u05e2" : "I need to find and book home service professionals"}</p>
                   {role === "client" && <div className="signup-role-check">✓</div>}
@@ -663,7 +555,7 @@ export default function SignUp() {
                   className={`signup-role-option ${role === "professional" ? "signup-role-option--active" : ""}`}
                   onClick={() => { setRole("professional"); if (errors.role) setErrors({}); }}
                 >
-                  <div className="signup-role-icon"><IconWrench /></div>
+                  <div className="signup-role-icon"><IconWrench size={36} /></div>
                   <h3 className="signup-role-title">{isHe ? "\u05d1\u05e2\u05dc \u05de\u05e7\u05e6\u05d5\u05e2" : "Professional"}</h3>
                   <p className="signup-role-desc">{isHe ? "\u05d0\u05e0\u05d9 \u05de\u05e6\u05d9\u05e2 \u05e9\u05d9\u05e8\u05d5\u05ea\u05d9 \u05d1\u05d9\u05ea \u05d5\u05e8\u05d5\u05e6\u05d4 \u05dc\u05e7\u05d1\u05dc \u05e2\u05d5\u05d3 \u05dc\u05e7\u05d5\u05d7\u05d5\u05ea" : "I offer home services and want to get more clients"}</p>
                   {role === "professional" && <div className="signup-role-check">✓</div>}
