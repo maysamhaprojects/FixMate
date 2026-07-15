@@ -1,0 +1,140 @@
+/* ============================================================
+ *  FixMate — עיצוב מרכז העזרה העצמית
+ *  חולץ מ-MindMap.jsx (ה-<style> הפנימי + inline styles).
+ *  התחילית mm- מונעת התנגשות עם שאר קבצי העיצוב.
+ *  שימוש:  import "../styles/mindMap.css";
+ * ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Heebo:wght@400;500;600;700;800&display=swap');
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+.helpCard:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,.08); }
+
+/* ── עמוד ── */
+.mm-page {
+  background: linear-gradient(135deg,#F0F4FF 0%,#F8FAFF 50%,#FFF 100%);
+  min-height: 100vh;
+}
+.mm-page * { box-sizing: border-box; margin: 0; }
+
+/* ════════ NAV ════════ */
+.mm-nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid #E8ECF4;
+  box-shadow: 0 1px 12px rgba(0,0,0,.04);
+}
+.mm-nav-inner {
+  max-width: 900px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px;
+}
+.mm-nav-mid { text-align: center; flex: 1; }
+.mm-nav-title { font-family: 'Outfit'; font-size: 20px; font-weight: 700; color: #1A2B4A; display: block; }
+.mm-page[dir="rtl"] .mm-nav-title { font-family: 'Heebo', 'Outfit'; }
+.mm-nav-sub { font-size: 12px; color: #7C8DB5; }
+.mm-back-btn {
+  width: 44px; height: 44px; border-radius: 14px;
+  background: #F0F4FF; border: 1px solid #E2E8F0;
+  display: flex; align-items: center; justify-content: center;
+  color: #5A6B8A; cursor: pointer;
+}
+
+/* ════════ דף הנחיתה — כרטיסי המדריכים ════════ */
+.mm-wrap { max-width: 1120px; margin: 0 auto; padding: 44px 24px 70px; }
+.mm-head { text-align: center; margin-bottom: 40px; }
+.mm-h1 { font-family: 'Outfit', sans-serif; font-size: 34px; font-weight: 800; color: #1A2B4A; margin-bottom: 8px; }
+.mm-page[dir="rtl"] .mm-h1 { font-family: 'Heebo', 'Outfit'; }
+.mm-underline { display: block; margin: 0 auto 10px; }
+.mm-head-sub { font-size: 15.5px; color: #7C8DB5; }
+
+.mm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 24px; }
+.helpCard {
+  background: #FFF; border-radius: 18px; overflow: hidden;
+  border: 1px solid #EAEEF5; cursor: pointer;
+  box-shadow: 0 4px 18px rgba(15,23,42,.05);
+  transition: all .3s;
+  display: flex; flex-direction: column;
+}
+/* תמונת כותרת — הרקע הצבעוני והאייקון הם ה-fallback אם התמונה לא נטענת */
+.mm-cover {
+  position: relative; height: 172px;
+  display: flex; align-items: center; justify-content: center;
+}
+.mm-cover-icon { position: absolute; font-size: 52px; }
+.mm-cover img { position: relative; width: 100%; height: 100%; object-fit: cover; }
+
+.mm-card-body { padding: 18px 20px 20px; display: flex; flex-direction: column; flex: 1; }
+.mm-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.mm-card-icon { font-size: 20px; }
+.mm-card-title { font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 800; color: #1A2B4A; line-height: 1.3; }
+.mm-page[dir="rtl"] .mm-card-title { font-family: 'Heebo', 'Outfit'; }
+.mm-card-excerpt { font-size: 13.5px; color: #64748B; line-height: 1.65; margin-bottom: 16px; flex: 1; }
+.mm-card-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid #F1F5F9; padding-top: 12px;
+}
+.mm-card-steps { font-size: 12px; color: #94A3B8; }
+.mm-card-more { font-size: 14px; font-weight: 700; color: #2563EB; }
+
+/* ════════ מדריך שלב-אחר-שלב ════════ */
+.sg-wrap { max-width: 720px; margin: 0 auto; padding: 26px 20px 60px; animation: fadeUp .3s; }
+.sg-head { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.sg-head-icon {
+  width: 60px; height: 60px; border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px; flex-shrink: 0;
+}
+.sg-title { font-family: 'Outfit', sans-serif; font-size: 23px; font-weight: 800; color: #1A2B4A; margin-bottom: 2px; }
+.sg-sub { font-size: 13.5px; color: #7C8DB5; }
+
+.sg-steps { display: flex; flex-direction: column; gap: 12px; }
+.sg-step {
+  background: #FFF;
+  border: 1.5px solid #E8ECF4;
+  border-radius: 16px; overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,.03);
+  transition: all .2s;
+}
+.sg-step-btn {
+  width: 100%;
+  display: flex; align-items: center; gap: 14px;
+  padding: 15px 18px;
+  background: none; border: none; cursor: pointer;
+  font-family: inherit;
+  text-align: inherit;
+}
+.sg-step-num {
+  width: 30px; height: 30px; border-radius: 50%;
+  color: #FFF;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 14px; flex-shrink: 0;
+}
+.sg-step-label { flex: 1; font-size: 15px; font-weight: 700; color: #1A2B4A; }
+.sg-step-chevron { color: #94A3B8; display: flex; }
+
+.sg-tips { padding: 0 18px 16px 18px; display: flex; flex-direction: column; gap: 8px; animation: fadeUp .25s; }
+.sg-tip { display: flex; gap: 10px; align-items: flex-start; background: #F8FAFF; border-radius: 10px; padding: 10px 14px; }
+.sg-tip-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 8px; flex-shrink: 0; }
+.sg-tip-text { font-size: 14px; color: #334155; line-height: 1.6; }
+
+/* קריאה לפעולה */
+.sg-cta {
+  margin-top: 24px;
+  background: linear-gradient(135deg,#EEF2FF,#F8FAFF);
+  border: 1px solid #C7D2FE;
+  border-radius: 18px; padding: 22px 24px;
+  text-align: center;
+}
+.sg-cta-title { font-size: 15.5px; font-weight: 800; color: #1A2B4A; margin-bottom: 3px; font-family: 'Outfit', sans-serif; }
+.sg-cta-sub { font-size: 13.5px; color: #7C8DB5; margin-bottom: 16px; }
+.sg-cta-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 13px 30px; border-radius: 14px; border: none;
+  background: linear-gradient(135deg,#4F6AFF,#3B4FE0);
+  color: #FFF; font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  box-shadow: 0 6px 18px rgba(79,106,255,.3);
+}
