@@ -166,7 +166,12 @@ export default function ManageOrders() {
                     <div className="mo-meta">
                       <span className="mo-meta-item"><IconCal /> {L(order.date)}, {order.time}</span>
                       <span className="mo-meta-item"><IconPin /> {L(order.location)}</span>
-                      <span className="mo-price">₪{order.price}</span>
+                      {/* מחיר: מוצג רק בהזמנה שהושלמה עם מחיר. עד הסיום — "ייקבע בסיום" */}
+                      {order.status === "done" && order.price != null && order.price > 0
+                        ? <span className="mo-price">₪{order.price}</span>
+                        : order.status === "done"
+                          ? <span className="mo-price-pending">—</span>
+                          : <span className="mo-price-pending">{isHe ? "המחיר ייקבע בסיום" : "Price set on completion"}</span>}
                     </div>
 
                     {/* שורה תחתונה: חיוג + כפתורי פעולה */}

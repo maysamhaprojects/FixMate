@@ -158,6 +158,8 @@
 }
 .mo-meta-item { display: flex; align-items: center; gap: 4px; }
 .mo-price { font-weight: 700; color: #059669; font-size: 13px; }
+/* מחיר שטרם נקבע — טקסט עדין, לא מספר */
+.mo-price-pending { font-size: 12px; color: #94A3B8; font-style: italic; }
 
 /* שורה תחתונה */
 .mo-card-foot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }

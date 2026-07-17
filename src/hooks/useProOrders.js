@@ -47,7 +47,7 @@ export function useProOrders({ L }) {
             time: sched.slice(11, 16),
             location: b.address || "",
             phone: c.phone || "",
-            price: b.totalPrice != null ? b.totalPrice : 0,
+            price: b.totalPrice != null ? b.totalPrice : null,  // null = טרם נקבע (לא מציגים ₪0)
             status: mapStatus(b.status),
             cancellationReason: b.cancellationReason || "",
           };
