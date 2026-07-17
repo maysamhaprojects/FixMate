@@ -37,7 +37,7 @@ import "../styles/auth.css";
 import { useLang } from "../context/LanguageContext";
 import { useSignUp } from "../hooks/useSignUp";
 import { COUNTRIES } from "../data/countries";
-import { IconUser, IconMail, IconLock, IconPhone, IconMapPin, IconDollar, IconEye, IconEyeOff, IconWrench, IconHome, IconArrowLeft, IconArrowRight, IconSpinner, IconCheckCircle } from "../components/AuthIcons";
+import { IconUser, IconMail, IconLock, IconMapPin, IconDollar, IconEye, IconEyeOff, IconWrench, IconHome, IconArrowLeft, IconArrowRight, IconSpinner, IconCheckCircle } from "../components/AuthIcons";
 import { SERVICE_CATEGORIES } from "../data/serviceCategories";
 import { LEGAL_TERMS, LEGAL_PRIVACY } from "../data/legalContent";
 

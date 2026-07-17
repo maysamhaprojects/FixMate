@@ -175,7 +175,7 @@ export function useClientData({ t, lang, isHe }) {
   const saveEdit = () => {
     const order = editOrder;
     if (!order.bookingId) {
-      alert(isHe ? "שגיאה: חסר מזהה הזמנה. רענני את הדף (Ctrl+Shift+R) ונסי שוב." : "Error: missing booking id. Hard-refresh and try again.");
+      showToast(isHe ? "שגיאה: חסר מזהה הזמנה. רענני את הדף ונסי שוב." : "Error: missing booking id. Hard-refresh and try again.", "error");
       return;
     }
     // מאחדים תאריך + שעה ל-LocalDateTime בפורמט ISO
@@ -191,11 +191,12 @@ export function useClientData({ t, lang, isHe }) {
             ? { ...o, date: editDate, time: editTime, address: editAddr.trim(), description: editDesc }
             : o));
           setEditOrder(null);
+          showToast(isHe ? "ההזמנה עודכנה בהצלחה" : "Order updated successfully", "success");
         } else {
-          r.text().then((msg) => alert((isHe ? "עדכון נכשל: " : "Update failed: ") + (msg || ("קוד " + r.status))));
+          r.text().then((msg) => showToast((isHe ? "עדכון נכשל: " : "Update failed: ") + (msg || ("קוד " + r.status)), "error"));
         }
       })
-      .catch((e) => alert((isHe ? "שגיאת רשת: " : "Network error: ") + e.message))
+      .catch((e) => showToast((isHe ? "שגיאת רשת: " : "Network error: ") + e.message, "error"))
       .finally(() => setEditSaving(false));
   };
 
@@ -247,7 +248,7 @@ export function useClientData({ t, lang, isHe }) {
   const confirmCancel = () => {
     const order = cancelConfirm;
     if (!order.bookingId) {
-      alert(isHe ? "שגיאה: חסר מזהה הזמנה. רענני את הדף (Ctrl+Shift+R) ונסי שוב." : "Error: missing booking id. Hard-refresh and try again.");
+      showToast(isHe ? "שגיאה: חסר מזהה הזמנה. רענני את הדף ונסי שוב." : "Error: missing booking id. Hard-refresh and try again.", "error");
       return;
     }
     const q = cancelReason.trim() ? "?reason=" + encodeURIComponent(cancelReason.trim()) : "";
@@ -258,11 +259,12 @@ export function useClientData({ t, lang, isHe }) {
         if (r.ok) {
           setOrders(prev => prev.filter(o => o.id !== order.id)); // הוסר מהתצוגה רק אם השרת אישר
           setCancelConfirm(null); setCancelReason("");
+          showToast(isHe ? "ההזמנה בוטלה" : "Order cancelled", "success");
         } else {
-          alert((isHe ? "ביטול נכשל (קוד " : "Cancel failed (code ") + r.status + ")");
+          showToast((isHe ? "ביטול נכשל (קוד " : "Cancel failed (code ") + r.status + ")", "error");
         }
       })
-      .catch((e) => { alert((isHe ? "שגיאת רשת: " : "Network error: ") + e.message); });
+      .catch((e) => { showToast((isHe ? "שגיאת רשת: " : "Network error: ") + e.message, "error"); });
   };
 
   /* ── התראות ── */
