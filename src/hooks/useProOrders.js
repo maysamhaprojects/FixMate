@@ -22,10 +22,23 @@ export function useProOrders({ L }) {
   const [search,       setSearch      ] = useState("");
   const [modal,        setModal       ] = useState(null);
 
+  /* הטווח שבעל המקצוע הבטיח — כדי לוודא שהמחיר הסופי בתוכו */
+  const [priceRange, setPriceRange] = useState({ min: null, max: null });
+
   /* אנימציית כניסה */
   useEffect(() => {
     const tm = setTimeout(() => setMounted(true), 50);
     return () => clearTimeout(tm);
+  }, []);
+
+  /* טעינת טווח המחירים של בעל המקצוע מהפרופיל */
+  useEffect(() => {
+    apiFetch("/api/pro/profile")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((p) => {
+        if (p) setPriceRange({ min: p.hourlyRate ?? null, max: p.hourlyRateMax ?? null });
+      })
+      .catch(() => {});
   }, []);
 
   /* טעינת ההזמנות האמיתיות של בעל המקצוע */
@@ -69,10 +82,24 @@ export function useProOrders({ L }) {
   /* מחיר סופי — נקבע על ידי בעל המקצוע בסיום העבודה */
   const [finalPrice, setFinalPrice] = useState("");
 
+  /* בדיקה שהמחיר הסופי בתוך הטווח שבעל המקצוע הבטיח.
+     מחזיר הודעת שגיאה אם חורג, או null אם תקין. */
+  const priceError = (() => {
+    if (finalPrice === "") return null;               // עדיין לא הוקלד
+    const n = Number(finalPrice);
+    if (Number.isNaN(n) || n <= 0) return null;       // תיפול על ה-disabled הרגיל
+    const { min, max } = priceRange;
+    if (min != null && n < min) return { min, max, kind: "below" };
+    if (max != null && n > max) return { min, max, kind: "above" };
+    return null;
+  })();
+
   /* עדכון סטטוס הזמנה בשרת — PUT /api/pro/orders/:id/status */
   const doAction = async (orderId, actionId) => {
     const order = orders.find(o => o.id === orderId);
     if (!order) { setModal(null); return; }
+    // בסיום — לא מאשרים אם המחיר חורג מהטווח שהובטח
+    if (actionId === "finish" && priceError) return;
     // סטטוס לשרת (BookingStatus) וסטטוס לתצוגה
     const serverStatus = { accept: "CONFIRMED", start: "IN_PROGRESS", finish: "COMPLETED", reject: "CANCELLED" }[actionId];
     const uiStatus     = { accept: "confirmed", start: "in_progress", finish: "done",      reject: "cancelled" }[actionId];
@@ -103,6 +130,7 @@ export function useProOrders({ L }) {
     search, setSearch,
     modal, setModal,
     finalPrice, setFinalPrice,
+    priceRange, priceError,
     doAction,
   };
 }

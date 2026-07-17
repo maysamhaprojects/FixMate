@@ -42,6 +42,7 @@ export default function ManageOrders() {
     search, setSearch,
     modal, setModal,
     finalPrice, setFinalPrice,
+    priceRange, priceError,
     doAction,
   } = useProOrders({ L });
 
@@ -219,11 +220,11 @@ export default function ManageOrders() {
               <p className="mo-modal-line"><strong>{L(modal.order.clientName)}</strong> — {L(modal.order.service)}</p>
               <p className="mo-modal-when">{L(modal.order.date)}, {modal.order.time}</p>
 
-              {/* בסיום העבודה — בעל המקצוע קובע את המחיר הסופי */}
+              {/* בסיום העבודה — בעל המקצוע קובע את המחיר הסופי (בתוך הטווח שהבטיח) */}
               {modal.actionId === "finish" && (
                 <div className="mo-price-field">
                   <label className="mo-price-label">{isHe ? "מה המחיר הסופי של העבודה?" : "What's the final price for this job?"}</label>
-                  <div className="mo-price-input-wrap">
+                  <div className={"mo-price-input-wrap" + (priceError ? " mo-price-input-wrap--err" : "")}>
                     <span className="mo-price-shekel">₪</span>
                     <input
                       className="mo-price-input"
@@ -235,7 +236,24 @@ export default function ManageOrders() {
                       autoFocus
                     />
                   </div>
-                  <p className="mo-price-hint">{isHe ? "הלקוח יראה את הסכום הזה כמחיר לתשלום" : "The client will see this as the amount to pay"}</p>
+                  {/* מציגים את הטווח שבעל המקצוע הבטיח, אם הוגדר */}
+                  {(priceRange.min != null || priceRange.max != null) && (
+                    <p className="mo-price-range-note">
+                      {isHe ? "הטווח שהגדרת: " : "Your range: "}
+                      ₪{priceRange.min ?? 0}{priceRange.max != null ? "–₪" + priceRange.max : "+"}
+                    </p>
+                  )}
+                  {priceError ? (
+                    <p className="mo-price-err">
+                      {priceError.kind === "above"
+                        ? (isHe ? `המחיר גבוה מהטווח שהבטחת (עד ₪${priceError.max}). כדי לגבות יותר — עדכן/י את הטווח בפרופיל.`
+                                : `Above your promised range (up to ₪${priceError.max}). To charge more, update your range in the profile.`)
+                        : (isHe ? `המחיר נמוך מהטווח שהבטחת (מ-₪${priceError.min}).`
+                                : `Below your promised range (from ₪${priceError.min}).`)}
+                    </p>
+                  ) : (
+                    <p className="mo-price-hint">{isHe ? "הלקוח יראה את הסכום הזה כמחיר לתשלום" : "The client will see this as the amount to pay"}</p>
+                  )}
                 </div>
               )}
 
@@ -246,7 +264,7 @@ export default function ManageOrders() {
                 <button
                   className="mo-modal-ok"
                   onClick={() => doAction(modal.order.id, modal.actionId)}
-                  disabled={modal.actionId === "finish" && finalPrice === ""}
+                  disabled={modal.actionId === "finish" && (finalPrice === "" || !!priceError)}
                   style={{ background: cfg.btnBg, boxShadow: `0 6px 20px ${cfg.glow}` }}
                 >
                   {L(cfg.btn)}
