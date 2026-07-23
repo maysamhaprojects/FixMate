@@ -414,3 +414,19 @@
 }
 .bp-success-title { font-family: 'Outfit'; font-size: 24px; font-weight: 700; color: #1A2B4A; margin-bottom: 8px; }
 .bp-success-sub { font-size: 15px; color: #7C8DB5; line-height: 1.6; }
+
+/* ── רספונסיביות למובייל/טאבלט ── */
+@media (max-width: 640px) {
+  .bp-body { padding: 16px 14px 32px; }
+
+  /* stepper — הקו נמתח, התוויות מתפרסות בלי רוחב קבוע שגולש */
+  .bp-step-line { width: auto; flex: 1; margin: 0 6px; }
+  .bp-step-labels { gap: 0; justify-content: space-between; }
+  .bp-step-label { width: auto; flex: 1; font-size: 11px; }
+
+  /* תאריך ושעה — עמודה אחת */
+  .bp-datetime { grid-template-columns: 1fr; gap: 12px; }
+
+  /* בעלי מקצוע — כרטיס אחד ברוחב מלא */
+  .bp-pros { grid-template-columns: 1fr; }
+}

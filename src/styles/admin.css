@@ -321,3 +321,15 @@
 .admin-order-price { font-size: 13px; font-weight: 800; color: #059669; font-family: 'Outfit', sans-serif; }
 /* מחיר שטרם נקבע (הזמנה לא הושלמה) */
 .admin-order-price--pending, .admin-mini-price--pending { color: #CBD5E1; font-weight: 600; }
+
+/* ── רספונסיביות למובייל/טאבלט (בסוף הקובץ כדי לגבור על כללי הבסיס) ── */
+@media (max-width: 768px) {
+  /* פאנלים זה-מתחת-לזה במקום שתי עמודות צפופות */
+  .admin-two-col { grid-template-columns: 1fr; }
+  /* פחות padding כדי להשאיר רוחב לתוכן ליד ה-sidebar הצר */
+  .admin-content { padding: 16px 14px 48px; }
+  /* שדה חיפוש נמתח במקום רוחב קבוע שגולש */
+  .admin-search-input { width: 100%; max-width: 100%; }
+  /* מרווח לשורות טבלה כדי שהתגיות/כפתורים לא ייחתכו */
+  .admin-row-main, .admin-row-main--wide { min-width: 140px; }
+}

@@ -97,7 +97,7 @@
 .pro-notif-backdrop { position: fixed; inset: 0; z-index: 150; }
 .pro-notif-panel {
   position: absolute; top: 48px; right: 0;
-  width: 360px;
+  width: min(360px, calc(100vw - 24px));
   background: #FFF;
   border-radius: 18px;
   border: 1px solid #E8ECF4;

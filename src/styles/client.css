@@ -675,8 +675,8 @@
   .cd-order-top { flex-wrap: wrap; }
   .cd-order-right { flex-direction: row; align-items: center; gap: 10px; }
   .cd-order-meta { flex-direction: column; gap: 8px; }
-  .cd-notif-dropdown { width: calc(100vw - 32px); right: -60px; }
-  .cd-profile-dropdown { width: calc(100vw - 32px); right: -20px; }
+  .cd-notif-dropdown { width: calc(100vw - 32px); right: 0; }
+  .cd-profile-dropdown { width: calc(100vw - 32px); right: 0; }
 }
 
 @media (max-width: 480px) {

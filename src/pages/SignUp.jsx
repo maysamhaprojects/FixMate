@@ -314,7 +314,7 @@ export default function SignUp() {
                     </button>
 
                     {phoneDdOpen && (
-                      <div style={{ position: "absolute", top: "calc(100% + 6px)", insetInlineStart: 0, zIndex: 60, width: 280, background: "#FFF", borderRadius: 14, border: "1px solid #E8ECF4", boxShadow: "0 12px 32px rgba(0,0,0,.14)", overflow: "hidden" }}>
+                      <div style={{ position: "absolute", top: "calc(100% + 6px)", insetInlineStart: 0, zIndex: 60, width: "min(280px, calc(100vw - 48px))", background: "#FFF", borderRadius: 14, border: "1px solid #E8ECF4", boxShadow: "0 12px 32px rgba(0,0,0,.14)", overflow: "hidden" }}>
                         {/* שדה חיפוש */}
                         <div style={{ padding: 10, borderBottom: "1px solid #F1F5F9" }}>
                           <input autoFocus type="text" value={countrySearch}
